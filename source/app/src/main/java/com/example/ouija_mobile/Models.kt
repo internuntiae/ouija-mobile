@@ -1,4 +1,5 @@
 package com.example.ouija_mobile
+
 data class User(
     val id: String,
     val email: String,
@@ -21,10 +22,10 @@ data class ChatUser(
 )
 
 data class Message(
-    val id: Int,
+    val id: String,
     val chatId: String,
     val senderId: String,
-    val content: String,
+    val content: String?,
     val sentAt: String,
     val editedAt: String?
 )

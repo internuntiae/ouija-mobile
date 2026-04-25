@@ -48,7 +48,7 @@ class ChatActivity : AppCompatActivity() {
         recycler.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         recycler.adapter = adapter
 
-        // Load existing messages
+        // Załaduj historię wiadomości
         apiClient.getMessages(chatId,
             onSuccess = { messages ->
                 runOnUiThread {
@@ -61,13 +61,28 @@ class ChatActivity : AppCompatActivity() {
             }
         )
 
-        // WebSocket for live messages
+        // WebSocket — nowa wiadomość
         wsClient.onMessageReceived = { message ->
             runOnUiThread {
                 adapter.addMessage(message)
                 recycler.scrollToPosition(adapter.itemCount - 1)
             }
         }
+
+        // WebSocket — edycja wiadomości
+        wsClient.onMessageUpdated = { message ->
+            runOnUiThread {
+                adapter.updateMessage(message)
+            }
+        }
+
+        // WebSocket — usunięcie wiadomości
+        wsClient.onMessageDeleted = { messageId ->
+            runOnUiThread {
+                adapter.removeMessage(messageId)
+            }
+        }
+
         wsClient.connect(chatId)
 
         btnSend.setOnClickListener {
@@ -77,7 +92,9 @@ class ChatActivity : AppCompatActivity() {
 
             apiClient.sendMessage(chatId, myId, text,
                 onSuccess = { message ->
-                    // WS should echo it back; if not, add manually
+                    // Backend roześle przez WS do wszystkich członków czatu (łącznie z nami),
+                    // więc addMessage() zostanie wywołane przez onMessageReceived.
+                    // Na wypadek gdyby WS nie działał — dodajemy ręcznie (addMessage deduplikuje).
                     runOnUiThread {
                         adapter.addMessage(message)
                         recycler.scrollToPosition(adapter.itemCount - 1)
@@ -113,10 +130,26 @@ class MessageAdapter(private val myUserId: String) :
     }
 
     fun addMessage(message: Message) {
-        // Avoid duplicate if WS echoes our own sent message
+        // Deduplication — nie dodawaj jeśli już mamy (np. echo własnej wiadomości przez WS)
         if (messages.none { it.id == message.id }) {
             messages.add(message)
             notifyItemInserted(messages.size - 1)
+        }
+    }
+
+    fun updateMessage(message: Message) {
+        val idx = messages.indexOfFirst { it.id == message.id }
+        if (idx != -1) {
+            messages[idx] = message
+            notifyItemChanged(idx)
+        }
+    }
+
+    fun removeMessage(messageId: String) {
+        val idx = messages.indexOfFirst { it.id == messageId }
+        if (idx != -1) {
+            messages.removeAt(idx)
+            notifyItemRemoved(idx)
         }
     }
 
@@ -141,8 +174,9 @@ class MessageAdapter(private val myUserId: String) :
         private val tvTime = view.findViewById<TextView>(R.id.tvTime)
 
         fun bind(message: Message) {
-            tvContent.text = message.content
-            tvTime.text = message.sentAt.substring(11, 16) // HH:mm from ISO string
+            tvContent.text = message.content ?: ""
+            // Bezpieczne wycinanie HH:mm — sentAt może być ISO-8601 lub skrócone
+            tvTime.text = if (message.sentAt.length >= 16) message.sentAt.substring(11, 16) else message.sentAt
         }
     }
 

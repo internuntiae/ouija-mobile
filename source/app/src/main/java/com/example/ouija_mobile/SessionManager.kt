@@ -20,10 +20,12 @@ class SessionManager(context: Context) {
 
     companion object {
         private const val KEY_SERVER_URL = "server_url"
-        private const val KEY_USER_ID = "user_id"
-        private const val KEY_NICKNAME = "nickname"
-        private const val KEY_EMAIL = "email"
-        private const val KEY_PASSWORD = "password" // stored for Basic Auth header
+        private const val KEY_API_URL    = "api_url"
+        private const val KEY_MEDIA_URL  = "media_url"
+        private const val KEY_USER_ID    = "user_id"
+        private const val KEY_NICKNAME   = "nickname"
+        private const val KEY_EMAIL      = "email"
+        private const val KEY_PASSWORD   = "password" // stored for Basic Auth header
         private const val KEY_AVATAR_URL = "avatar_url"
     }
 
@@ -37,16 +39,22 @@ class SessionManager(context: Context) {
             .apply()
     }
 
-    fun saveServerUrl(url: String) {
-        prefs.edit().putString(KEY_SERVER_URL, url).apply()
+    fun saveServerUrls(webUrl: String, apiUrl: String, mediaUrl: String) {
+        prefs.edit()
+            .putString(KEY_SERVER_URL, webUrl)
+            .putString(KEY_API_URL, apiUrl)
+            .putString(KEY_MEDIA_URL, mediaUrl)
+            .apply()
     }
 
     fun getServerUrl(): String? = prefs.getString(KEY_SERVER_URL, null)
+    fun getApiUrl(): String?    = prefs.getString(KEY_API_URL, null)
+    fun getMediaUrl(): String?  = prefs.getString(KEY_MEDIA_URL, null)
 
-    fun getUserId(): String? = prefs.getString(KEY_USER_ID, null)
-    fun getNickname(): String? = prefs.getString(KEY_NICKNAME, null)
-    fun getEmail(): String? = prefs.getString(KEY_EMAIL, null)
-    fun getPassword(): String? = prefs.getString(KEY_PASSWORD, null)
+    fun getUserId(): String?    = prefs.getString(KEY_USER_ID, null)
+    fun getNickname(): String?  = prefs.getString(KEY_NICKNAME, null)
+    fun getEmail(): String?     = prefs.getString(KEY_EMAIL, null)
+    fun getPassword(): String?  = prefs.getString(KEY_PASSWORD, null)
     fun getAvatarUrl(): String? = prefs.getString(KEY_AVATAR_URL, null)
 
     fun isLoggedIn(): Boolean = getUserId() != null

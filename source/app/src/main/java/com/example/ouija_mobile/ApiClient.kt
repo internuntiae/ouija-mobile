@@ -12,14 +12,14 @@ class ApiClient(private val sessionManager: SessionManager) {
 
     private val baseUrl: String
         get() {
-            val host = sessionManager.getServerUrl() ?: "http://10.0.2.2:3000"
-            return if (host.endsWith("/")) "${host}api" else "$host/api"
+            val api = sessionManager.getApiUrl() ?: "http://10.0.2.2:3001"
+            return api.removeSuffix("/") + "/api"
         }
 
     val wsUrl: String
         get() {
-            val host = sessionManager.getServerUrl() ?: "http://10.0.2.2:3000"
-            return host.replace("http://", "ws://").replace("https://", "wss://").removeSuffix("/")
+            val api = sessionManager.getApiUrl() ?: "http://10.0.2.2:3001"
+            return api.replace("http://", "ws://").replace("https://", "wss://").removeSuffix("/")
         }
 
     companion object {
@@ -54,7 +54,7 @@ class ApiClient(private val sessionManager: SessionManager) {
         val body = gson.toJson(RegisterRequest(email, password, nickname))
             .toRequestBody(JSON)
         val request = Request.Builder()
-            .url("$baseUrl/users")
+            .url("$baseUrl")
             .post(body)
             .build()
 
@@ -75,7 +75,7 @@ class ApiClient(private val sessionManager: SessionManager) {
 
     fun getUser(userId: String, onSuccess: (User) -> Unit, onError: (String) -> Unit) {
         // API returns list of all users; find by ID
-        val request = buildRequest("$baseUrl/users").get().build()
+        val request = buildRequest("$baseUrl").get().build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {
@@ -103,7 +103,7 @@ class ApiClient(private val sessionManager: SessionManager) {
     ) {
         val credentials = "Basic " + Base64.encodeToString("$email:$password".toByteArray(), Base64.NO_WRAP)
         val request = Request.Builder()
-            .url("$baseUrl/users")
+            .url("$baseUrl")
             .header("Authorization", credentials)
             .get()
             .build()

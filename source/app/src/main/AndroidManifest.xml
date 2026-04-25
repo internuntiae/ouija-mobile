@@ -10,11 +10,13 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.App.Starting"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".ServerConfigActivity"
             android:exported="true"
+            android:theme="@style/Theme.Ouija"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -25,24 +27,29 @@
         <activity
             android:name=".LoginActivity"
             android:exported="true"
+            android:theme="@style/Theme.Ouija"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".RegisterActivity"
+            android:theme="@style/Theme.Ouija"
             android:windowSoftInputMode="adjustResize"/>
 
         <activity
             android:name=".ChatsActivity"
+            android:theme="@style/Theme.Ouija"
             android:exported="false"/>
 
         <activity
             android:name="com.example.ouija_mobile.ChatActivity"
+            android:theme="@style/Theme.Ouija.Chat"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"
             android:parentActivityName=".ChatsActivity"/>
 
         <activity
             android:name=".ProfileActivity"
+            android:theme="@style/Theme.Ouija"
             android:exported="false"/>
 
     </application>

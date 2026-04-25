@@ -57,8 +57,8 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         btnLogout.setOnClickListener {
-            sessionManager.clearSession()
-            startActivity(Intent(this, LoginActivity::class.java).apply {
+            sessionManager.clearSession() // clears session AND server URL — shows ServerConfigActivity
+            startActivity(Intent(this, ServerConfigActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             })
         }

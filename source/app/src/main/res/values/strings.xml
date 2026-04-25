@@ -1,3 +1,36 @@
 <resources>
     <string name="app_name">ouija-mobile</string>
+
+    <!-- Login -->
+    <string name="login_welcome">Witaj ponownie</string>
+    <string name="login_subtitle">Zaloguj się do swojego konta Ouija</string>
+    <string name="label_username">Nazwa użytkownika</string>
+    <string name="hint_email">Wpisz swój email</string>
+    <string name="label_password">Hasło</string>
+    <string name="login_forgot_password">Zapomniałeś?</string>
+    <string name="hint_password">••••••••</string>
+    <string name="btn_login">Zaloguj się</string>
+    <string name="login_no_account">Nie masz konta? </string>
+    <string name="login_register_now">Zarejestruj się</string>
+
+    <!-- Register -->
+    <string name="register_title">Utwórz konto</string>
+    <string name="register_subtitle">Dołącz do Ouija</string>
+    <string name="hint_nickname">Wpisz nick</string>
+    <string name="label_email">Email</string>
+    <string name="hint_password_min">Min. 6 znaków</string>
+    <string name="btn_register">Zarejestruj się</string>
+    <string name="register_has_account">Masz już konto? </string>
+
+    <!-- Chats -->
+    <string name="chats_title">Wiadomości</string>
+    <string name="hint_search">Szukaj&#8230;</string>
+    <string name="chats_empty">Brak konwersacji</string>
+
+    <!-- Chat -->
+    <string name="hint_message">Napisz wiadomość&#8230;</string>
+    <string name="desc_send">Wyślij</string>
+
+    <!-- Profile -->
+    <string name="btn_logout">Wyloguj się</string>
 </resources>

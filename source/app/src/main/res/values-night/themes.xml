@@ -1,7 +1,25 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Ouijamobile" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+    <style name="Theme.Ouija" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Custom attributes -->
+        <item name="customWindowBackground">@color/dark_window_background</item>
+        <item name="customSurface">@color/dark_surface</item>
+        <item name="customCardBackground">@color/dark_card_background</item>
+        <item name="customInputBackground">@color/dark_input_background</item>
+        <item name="customTextPrimary">@color/dark_text_primary</item>
+        <item name="customTextSecondary">@color/dark_text_secondary</item>
+        <item name="customTextTertiary">@color/dark_text_tertiary</item>
+        <item name="customHintColor">@color/dark_hint</item>
+        <item name="customPrimary">@color/dark_primary</item>
+        <item name="customOnPrimary">@color/dark_on_primary</item>
+        <item name="customDangerBackground">@color/dark_danger_background</item>
+        <item name="customDangerStroke">@color/dark_danger_stroke</item>
+
+        <!-- Standard attributes -->
+        <item name="colorPrimary">?attr/customPrimary</item>
+        <item name="colorOnPrimary">?attr/customOnPrimary</item>
+        <item name="android:windowBackground">?attr/customWindowBackground</item>
+        <item name="android:statusBarColor">?attr/customWindowBackground</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">?attr/customSurface</item>
     </style>
 </resources>

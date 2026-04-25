@@ -5,11 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#111111">
+    android:background="?attr/customWindowBackground">
 
     <TextView
-        android:text="Wiadomości"
-        android:textColor="#FFFFFF"
+        android:text="@string/chats_title"
+        android:textColor="?attr/customTextPrimary"
         android:textSize="22sp"
         android:fontFamily="sans-serif-medium"
         android:padding="20dp"
@@ -22,9 +22,9 @@
         android:layout_height="44dp"
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="12dp"
-        android:hint="Szukaj..."
-        android:textColorHint="#555555"
-        android:textColor="#FFFFFF"
+        android:hint="@string/hint_search"
+        android:textColorHint="?attr/customHintColor"
+        android:textColor="?attr/customTextPrimary"
         android:background="@drawable/bg_input"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
@@ -32,8 +32,8 @@
 
     <TextView
         android:id="@+id/tvEmpty"
-        android:text="Brak konwersacji"
-        android:textColor="#666666"
+        android:text="@string/chats_empty"
+        android:textColor="?attr/customTextSecondary"
         android:textSize="15sp"
         android:gravity="center"
         android:layout_width="match_parent"
@@ -53,9 +53,9 @@
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/surface_dark"
+        android:background="?attr/customSurface"
         app:menu="@menu/bottom_nav_menu"
-        app:itemIconTint="#FFFFFF"
-        app:itemTextColor="#FFFFFF"/>
+        app:itemIconTint="?attr/customTextPrimary"
+        app:itemTextColor="?attr/customTextPrimary"/>
 
 </LinearLayout>

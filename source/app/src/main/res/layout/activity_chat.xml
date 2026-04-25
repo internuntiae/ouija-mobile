@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#111111">
+    android:background="?attr/customWindowBackground">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerMessages"
@@ -21,7 +21,7 @@
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:orientation="horizontal"
-        android:background="@color/surface_dark"
+        android:background="?attr/customSurface"
         android:paddingHorizontal="12dp"
         android:paddingVertical="10dp"
         android:gravity="center_vertical">
@@ -32,9 +32,9 @@
             android:layout_height="44dp"
             android:layout_weight="1"
             android:background="@drawable/bg_input"
-            android:hint="Napisz wiadomość..."
-            android:textColorHint="#555555"
-            android:textColor="#FFFFFF"
+            android:hint="@string/hint_message"
+            android:textColorHint="?attr/customHintColor"
+            android:textColor="?attr/customTextPrimary"
             android:paddingHorizontal="16dp"
             android:inputType="textMultiLine|textCapSentences"
             android:maxLines="3" />
@@ -46,8 +46,8 @@
             android:layout_marginStart="8dp"
             android:background="@drawable/bg_send_button"
             android:src="@android:drawable/ic_menu_send"
-            android:contentDescription="Wyślij"
-            app:tint="#111111" />
+            android:contentDescription="@string/desc_send"
+            app:tint="?attr/customOnPrimary" />
 
     </LinearLayout>
 

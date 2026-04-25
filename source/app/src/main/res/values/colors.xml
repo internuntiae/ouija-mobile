@@ -2,6 +2,32 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="surface_dark">#1A1A1A</color>
-    <color name="background_main">#111111</color>
+
+    <!-- Dark Theme Colors -->
+    <color name="dark_window_background">#111111</color>
+    <color name="dark_surface">#1A1A1A</color>
+    <color name="dark_card_background">#1E1E1E</color>
+    <color name="dark_input_background">#2A2A2A</color>
+    <color name="dark_primary">#FFFFFF</color>
+    <color name="dark_on_primary">#111111</color>
+    <color name="dark_text_primary">#FFFFFF</color>
+    <color name="dark_text_secondary">#888888</color>
+    <color name="dark_text_tertiary">#CCCCCC</color>
+    <color name="dark_hint">#555555</color>
+    <color name="dark_danger_background">#3A1A1A</color>
+    <color name="dark_danger_stroke">#CC3333</color>
+
+    <!-- Light Theme Colors -->
+    <color name="light_window_background">#F5F5F5</color>
+    <color name="light_surface">#FFFFFF</color>
+    <color name="light_card_background">#FFFFFF</color>
+    <color name="light_input_background">#E0E0E0</color>
+    <color name="light_primary">#111111</color>
+    <color name="light_on_primary">#FFFFFF</color>
+    <color name="light_text_primary">#111111</color>
+    <color name="light_text_secondary">#666666</color>
+    <color name="light_text_tertiary">#444444</color>
+    <color name="light_hint">#999999</color>
+    <color name="light_danger_background">#FFE0E0</color>
+    <color name="light_danger_stroke">#D32F2F</color>
 </resources>

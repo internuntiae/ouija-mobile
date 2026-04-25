@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="customWindowBackground" format="color" />
+    <attr name="customSurface" format="color" />
+    <attr name="customCardBackground" format="color" />
+    <attr name="customInputBackground" format="color" />
+    <attr name="customTextPrimary" format="color" />
+    <attr name="customTextSecondary" format="color" />
+    <attr name="customTextTertiary" format="color" />
+    <attr name="customHintColor" format="color" />
+    <attr name="customPrimary" format="color" />
+    <attr name="customOnPrimary" format="color" />
+    <attr name="customDangerBackground" format="color" />
+    <attr name="customDangerStroke" format="color" />
+</resources>

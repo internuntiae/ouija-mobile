@@ -1,31 +1,32 @@
 <resources>
-    <style name="Theme.Ouija" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#FFFFFF</item>
-        <item name="colorPrimaryVariant">#CCCCCC</item>
-        <item name="colorOnPrimary">#111111</item>
-        <item name="colorSurface">@color/surface_dark</item>
-        <item name="colorOnSurface">#FFFFFF</item>
-        <item name="android:windowBackground">@color/background_main</item>
-        <item name="android:statusBarColor">@color/background_main</item>
-        <item name="android:navigationBarColor">@color/surface_dark</item>
-        <item name="android:windowLightStatusBar">false</item>
+    <style name="Theme.Ouija" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Custom attributes -->
+        <item name="customWindowBackground">@color/light_window_background</item>
+        <item name="customSurface">@color/light_surface</item>
+        <item name="customCardBackground">@color/light_card_background</item>
+        <item name="customInputBackground">@color/light_input_background</item>
+        <item name="customTextPrimary">@color/light_text_primary</item>
+        <item name="customTextSecondary">@color/light_text_secondary</item>
+        <item name="customTextTertiary">@color/light_text_tertiary</item>
+        <item name="customHintColor">@color/light_hint</item>
+        <item name="customPrimary">@color/light_primary</item>
+        <item name="customOnPrimary">@color/light_on_primary</item>
+        <item name="customDangerBackground">@color/light_danger_background</item>
+        <item name="customDangerStroke">@color/light_danger_stroke</item>
+
+        <!-- Standard attributes -->
+        <item name="colorPrimary">?attr/customPrimary</item>
+        <item name="colorOnPrimary">?attr/customOnPrimary</item>
+        <item name="android:windowBackground">?attr/customWindowBackground</item>
+        <item name="android:statusBarColor">?attr/customWindowBackground</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">?attr/customSurface</item>
     </style>
-    <!-- Chat screen uses ActionBar for back navigation -->
-    <style name="Theme.Ouija.Chat" parent="Theme.MaterialComponents.DayNight">
-        <item name="colorPrimary">@color/surface_dark</item>
-        <item name="colorPrimaryVariant">#111111</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="android:windowBackground">@color/background_main</item>
-        <item name="android:statusBarColor">@color/surface_dark</item>
-        <item name="android:navigationBarColor">@color/surface_dark</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="actionBarStyle">@style/ActionBar.Ouija</item>
-    </style>
-    <style name="ActionBar.Ouija" parent="Widget.AppCompat.ActionBar">
-        <item name="background">@color/surface_dark</item>
-        <item name="titleTextStyle">@style/ActionBar.Ouija.Title</item>
-    </style>
-    <style name="ActionBar.Ouija.Title" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
-        <item name="android:textColor">#FFFFFF</item>
+
+    <style name="Theme.Ouija.Chat" parent="Theme.Ouija">
+        <!-- Chat screen might need an ActionBar if used with parentActivityName -->
+        <!-- But since it's Material3, we might use TopAppBar in Compose/Layout -->
+        <!-- For now, if it needs a real ActionBar: -->
+        <!-- <item name="windowActionBar">true</item> -->
     </style>
 </resources>

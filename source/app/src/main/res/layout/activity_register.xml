@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#111111"
+    android:background="?attr/customWindowBackground"
     android:padding="24dp">
 
     <LinearLayout
@@ -21,8 +21,8 @@
         app:layout_constraintVertical_bias="0.4">
 
         <TextView
-            android:text="Utwórz konto"
-            android:textColor="#FFFFFF"
+            android:text="@string/register_title"
+            android:textColor="?attr/customTextPrimary"
             android:textSize="26sp"
             android:fontFamily="sans-serif-medium"
             android:gravity="center"
@@ -30,8 +30,8 @@
             android:layout_height="wrap_content"/>
 
         <TextView
-            android:text="Dołącz do Ouija"
-            android:textColor="#888888"
+            android:text="@string/register_subtitle"
+            android:textColor="?attr/customTextSecondary"
             android:textSize="14sp"
             android:gravity="center"
             android:layout_marginTop="6dp"
@@ -40,8 +40,8 @@
             android:layout_height="wrap_content"/>
 
         <TextView
-            android:text="Nazwa użytkownika"
-            android:textColor="#CCCCCC"
+            android:text="@string/label_username"
+            android:textColor="?attr/customTextTertiary"
             android:textSize="13sp"
             android:layout_marginBottom="6dp"
             android:layout_width="wrap_content"
@@ -51,9 +51,9 @@
             android:id="@+id/etNickname"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:hint="Wpisz nick"
-            android:textColorHint="#555555"
-            android:textColor="#FFFFFF"
+            android:hint="@string/hint_nickname"
+            android:textColorHint="?attr/customHintColor"
+            android:textColor="?attr/customTextPrimary"
             android:background="@drawable/bg_input"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
@@ -61,8 +61,8 @@
             android:layout_marginBottom="16dp"/>
 
         <TextView
-            android:text="Email"
-            android:textColor="#CCCCCC"
+            android:text="@string/label_email"
+            android:textColor="?attr/customTextTertiary"
             android:textSize="13sp"
             android:layout_marginBottom="6dp"
             android:layout_width="wrap_content"
@@ -72,9 +72,9 @@
             android:id="@+id/etEmail"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:hint="Wpisz email"
-            android:textColorHint="#555555"
-            android:textColor="#FFFFFF"
+            android:hint="@string/hint_email"
+            android:textColorHint="?attr/customHintColor"
+            android:textColor="?attr/customTextPrimary"
             android:background="@drawable/bg_input"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
@@ -82,8 +82,8 @@
             android:layout_marginBottom="16dp"/>
 
         <TextView
-            android:text="Hasło"
-            android:textColor="#CCCCCC"
+            android:text="@string/label_password"
+            android:textColor="?attr/customTextTertiary"
             android:textSize="13sp"
             android:layout_marginBottom="6dp"
             android:layout_width="wrap_content"
@@ -93,9 +93,9 @@
             android:id="@+id/etPassword"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:hint="Min. 6 znaków"
-            android:textColorHint="#555555"
-            android:textColor="#FFFFFF"
+            android:hint="@string/hint_password_min"
+            android:textColorHint="?attr/customHintColor"
+            android:textColor="?attr/customTextPrimary"
             android:background="@drawable/bg_input"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
@@ -114,8 +114,8 @@
             android:id="@+id/btnRegister"
             android:layout_width="match_parent"
             android:layout_height="52dp"
-            android:text="Zarejestruj się"
-            android:textColor="#111111"
+            android:text="@string/btn_register"
+            android:textColor="?attr/customOnPrimary"
             android:textSize="16sp"
             android:fontFamily="sans-serif-medium"
             android:background="@drawable/bg_button_primary"
@@ -127,15 +127,15 @@
             android:gravity="center"
             android:orientation="horizontal">
             <TextView
-                android:text="Masz już konto? "
-                android:textColor="#888888"
+                android:text="@string/register_has_account"
+                android:textColor="?attr/customTextSecondary"
                 android:textSize="14sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
             <TextView
                 android:id="@+id/tvLogin"
-                android:text="Zaloguj się"
-                android:textColor="#FFFFFF"
+                android:text="@string/btn_login"
+                android:textColor="?attr/customTextPrimary"
                 android:textSize="14sp"
                 android:fontFamily="sans-serif-medium"
                 android:layout_width="wrap_content"

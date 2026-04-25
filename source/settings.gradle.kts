@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "source"
+rootProject.name = "ouija-mobile"
 include(":app")

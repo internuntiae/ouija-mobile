@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.source"
+    namespace = "com.example.ouija_mobile"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -11,7 +11,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.source"
+        applicationId = "com.example.ouija_mobile"
         minSdk = 29
         targetSdk = 36
         versionCode = 1
@@ -36,12 +36,22 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
+    // Core
+    implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.material)
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.junit)
+
+    // RecyclerView
+    implementation("androidx.recyclerview:recyclerview:1.4.0")
+    // OkHttp (HTTP + WebSocket)
+    implementation("com.squareup.okhttp3:okhttp:5.3.2")
+    // Gson (JSON parsing)
+    implementation("com.google.code.gson:gson:2.14.0")
+    // EncryptedSharedPreferences (secure session storage)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }

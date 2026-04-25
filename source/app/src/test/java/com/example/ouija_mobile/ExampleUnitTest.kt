@@ -1,4 +1,4 @@
-package com.example.source
+package com.example.ouija_mobile
 
 import org.junit.Test
 

@@ -1,9 +1,31 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Source" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<resources>
+    <style name="Theme.Ouija" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#FFFFFF</item>
+        <item name="colorPrimaryVariant">#CCCCCC</item>
+        <item name="colorOnPrimary">#111111</item>
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="android:windowBackground">@color/background_main</item>
+        <item name="android:statusBarColor">@color/background_main</item>
+        <item name="android:navigationBarColor">@color/surface_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
-
-    <style name="Theme.Source" parent="Base.Theme.Source" />
+    <!-- Chat screen uses ActionBar for back navigation -->
+    <style name="Theme.Ouija.Chat" parent="Theme.MaterialComponents.DayNight">
+        <item name="colorPrimary">@color/surface_dark</item>
+        <item name="colorPrimaryVariant">#111111</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="android:windowBackground">@color/background_main</item>
+        <item name="android:statusBarColor">@color/surface_dark</item>
+        <item name="android:navigationBarColor">@color/surface_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="actionBarStyle">@style/ActionBar.Ouija</item>
+    </style>
+    <style name="ActionBar.Ouija" parent="Widget.AppCompat.ActionBar">
+        <item name="background">@color/surface_dark</item>
+        <item name="titleTextStyle">@style/ActionBar.Ouija.Title</item>
+    </style>
+    <style name="ActionBar.Ouija.Title" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
 </resources>

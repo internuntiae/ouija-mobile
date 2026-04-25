@@ -13,6 +13,16 @@
     <string name="login_no_account">Nie masz konta? </string>
     <string name="login_register_now">Zarejestruj się</string>
 
+    <!-- Server Config -->
+    <string name="server_config_title">Konfiguracja serwera</string>
+    <string name="server_config_subtitle">Wprowadź adres URL serwera, aby połączyć się z Ouija</string>
+    <string name="label_server_url">URL Serwera</string>
+    <string name="hint_server_url">http://10.0.2.2:3000</string>
+    <string name="btn_connect">Połącz</string>
+    <string name="error_invalid_url">Wprowadź poprawny URL</string>
+    <string name="error_server_unreachable">Nie można połączyć się z serwerem</string>
+    <string name="status_checking">Sprawdzanie połączenia&#8230;</string>
+
     <!-- Register -->
     <string name="register_title">Utwórz konto</string>
     <string name="register_subtitle">Dołącz do Ouija</string>

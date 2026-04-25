@@ -16,10 +16,16 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var apiClient: ApiClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         sessionManager = SessionManager(this)
+        // If server URL is not configured, go to ServerConfigActivity
+        if (sessionManager.getServerUrl() == null) {
+            startActivity(Intent(this, ServerConfigActivity::class.java))
+            finish()
+            return
+        }
+
         if (sessionManager.isLoggedIn()) {
             startChats()
             return

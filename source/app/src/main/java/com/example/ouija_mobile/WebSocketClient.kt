@@ -26,8 +26,9 @@ class WebSocketClient(private val sessionManager: SessionManager) {
         val password = sessionManager.getPassword() ?: return
         val credentials = Base64.encodeToString("$email:$password".toByteArray(), Base64.NO_WRAP)
 
+        val apiClient = ApiClient(sessionManager)
         val request = Request.Builder()
-            .url("${ApiClient.WS_URL}/chats/$chatId/ws")
+            .url("${apiClient.wsUrl}/chats/$chatId/ws")
             .header("Authorization", "Basic $credentials")
             .build()
 

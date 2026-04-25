@@ -19,6 +19,7 @@ class SessionManager(context: Context) {
     )
 
     companion object {
+        private const val KEY_SERVER_URL = "server_url"
         private const val KEY_USER_ID = "user_id"
         private const val KEY_NICKNAME = "nickname"
         private const val KEY_EMAIL = "email"
@@ -35,6 +36,12 @@ class SessionManager(context: Context) {
             .putString(KEY_AVATAR_URL, avatarUrl)
             .apply()
     }
+
+    fun saveServerUrl(url: String) {
+        prefs.edit().putString(KEY_SERVER_URL, url).apply()
+    }
+
+    fun getServerUrl(): String? = prefs.getString(KEY_SERVER_URL, null)
 
     fun getUserId(): String? = prefs.getString(KEY_USER_ID, null)
     fun getNickname(): String? = prefs.getString(KEY_NICKNAME, null)

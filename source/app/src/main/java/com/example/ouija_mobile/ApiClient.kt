@@ -10,10 +10,19 @@ import java.io.IOException
 
 class ApiClient(private val sessionManager: SessionManager) {
 
+    private val baseUrl: String
+        get() {
+            val host = sessionManager.getServerUrl() ?: "http://10.0.2.2:3000"
+            return if (host.endsWith("/")) "${host}api" else "$host/api"
+        }
+
+    val wsUrl: String
+        get() {
+            val host = sessionManager.getServerUrl() ?: "http://10.0.2.2:3000"
+            return host.replace("http://", "ws://").replace("https://", "wss://").removeSuffix("/")
+        }
+
     companion object {
-        // TODO: Replace with your actual server URL
-        const val BASE_URL = "http://10.0.2.2:3000/api"
-        const val WS_URL = "ws://10.0.2.2:3000"
         private val JSON = "application/json; charset=utf-8".toMediaType()
     }
 
@@ -45,7 +54,7 @@ class ApiClient(private val sessionManager: SessionManager) {
         val body = gson.toJson(RegisterRequest(email, password, nickname))
             .toRequestBody(JSON)
         val request = Request.Builder()
-            .url("$BASE_URL/users")
+            .url("$baseUrl/users")
             .post(body)
             .build()
 
@@ -66,7 +75,7 @@ class ApiClient(private val sessionManager: SessionManager) {
 
     fun getUser(userId: String, onSuccess: (User) -> Unit, onError: (String) -> Unit) {
         // API returns list of all users; find by ID
-        val request = buildRequest("$BASE_URL/users").get().build()
+        val request = buildRequest("$baseUrl/users").get().build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {
@@ -94,7 +103,7 @@ class ApiClient(private val sessionManager: SessionManager) {
     ) {
         val credentials = "Basic " + Base64.encodeToString("$email:$password".toByteArray(), Base64.NO_WRAP)
         val request = Request.Builder()
-            .url("$BASE_URL/users")
+            .url("$baseUrl/users")
             .header("Authorization", credentials)
             .get()
             .build()
@@ -119,7 +128,7 @@ class ApiClient(private val sessionManager: SessionManager) {
     // ── Chats ────────────────────────────────────────────────────────────────
 
     fun getChats(userId: String, onSuccess: (List<Chat>) -> Unit, onError: (String) -> Unit) {
-        val request = buildRequest("$BASE_URL/users/$userId/chats").get().build()
+        val request = buildRequest("$baseUrl/users/$userId/chats").get().build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {
@@ -139,7 +148,7 @@ class ApiClient(private val sessionManager: SessionManager) {
     // ── Messages ─────────────────────────────────────────────────────────────
 
     fun getMessages(chatId: String, onSuccess: (List<Message>) -> Unit, onError: (String) -> Unit) {
-        val request = buildRequest("$BASE_URL/chats/$chatId/messages").get().build()
+        val request = buildRequest("$baseUrl/chats/$chatId/messages").get().build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {
@@ -164,7 +173,7 @@ class ApiClient(private val sessionManager: SessionManager) {
         onError: (String) -> Unit
     ) {
         val body = gson.toJson(SendMessageRequest(senderId, content)).toRequestBody(JSON)
-        val request = buildRequest("$BASE_URL/chats/$chatId/messages").post(body).build()
+        val request = buildRequest("$baseUrl/chats/$chatId/messages").post(body).build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {

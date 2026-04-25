@@ -1,4 +1,10 @@
 <resources>
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenBackground">#111111</item>
+        <item name="postSplashScreenTheme">@style/Theme.Ouija</item>
+    </style>
+
     <style name="Theme.Ouija" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Custom attributes -->
         <item name="customWindowBackground">@color/light_window_background</item>
@@ -24,9 +30,5 @@
     </style>
 
     <style name="Theme.Ouija.Chat" parent="Theme.Ouija">
-        <!-- Chat screen might need an ActionBar if used with parentActivityName -->
-        <!-- But since it's Material3, we might use TopAppBar in Compose/Layout -->
-        <!-- For now, if it needs a real ActionBar: -->
-        <!-- <item name="windowActionBar">true</item> -->
     </style>
 </resources>

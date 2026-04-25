@@ -8,6 +8,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 class LoginActivity : AppCompatActivity() {
 
@@ -15,6 +16,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var apiClient: ApiClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         sessionManager = SessionManager(this)

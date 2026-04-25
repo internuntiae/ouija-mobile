@@ -7,7 +7,9 @@
     <application
         android:allowBackup="true"
         android:label="Ouija"
-        android:theme="@style/Theme.Ouija"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:theme="@style/Theme.App.Starting"
         android:supportsRtl="true">
 
         <activity

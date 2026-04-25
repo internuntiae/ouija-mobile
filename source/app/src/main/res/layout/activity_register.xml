@@ -137,6 +137,7 @@
                 android:text="@string/btn_login"
                 android:textColor="?attr/customTextPrimary"
                 android:textSize="14sp"
+                android:layout_marginStart="10dp"
                 android:fontFamily="sans-serif-medium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>

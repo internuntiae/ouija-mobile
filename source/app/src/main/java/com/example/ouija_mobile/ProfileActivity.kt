@@ -16,6 +16,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import android.widget.ImageView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.io.InputStream
 import java.net.URL
@@ -258,6 +259,7 @@ class FriendAdapter(private val myUserId: String) :
 
     class VH(view: View) : RecyclerView.ViewHolder(view) {
         private val tvInitials = view.findViewById<TextView>(R.id.tvInitials)
+        private val ivAvatar   = view.findViewById<ImageView>(R.id.ivAvatar)
         private val tvName     = view.findViewById<TextView>(R.id.tvName)
         private val tvStatus   = view.findViewById<TextView>(R.id.tvStatus)
 
@@ -265,12 +267,28 @@ class FriendAdapter(private val myUserId: String) :
             val other = if (f.userId == myUserId) f.friend else f.user
             tvName.text     = other.nickname
             tvInitials.text = other.nickname.take(2).uppercase()
+            tvInitials.visibility = View.VISIBLE
+            ivAvatar.visibility   = View.GONE
             tvStatus.text   = when (other.status) {
                 "ONLINE"    -> "🟢"
                 "AWAY"      -> "🟡"
                 "BUSY"      -> "🔴"
                 "INVISIBLE" -> "👻"
                 else        -> "⚫"
+            }
+            val url = other.avatarUrl
+            if (url != null) {
+                val executor = java.util.concurrent.Executors.newSingleThreadExecutor()
+                executor.execute {
+                    try {
+                        val bmp = android.graphics.BitmapFactory.decodeStream(java.net.URL(url).openStream())
+                        ivAvatar.post {
+                            ivAvatar.setImageBitmap(bmp)
+                            ivAvatar.visibility   = View.VISIBLE
+                            tvInitials.visibility = View.GONE
+                        }
+                    } catch (_: Exception) {}
+                }
             }
         }
     }

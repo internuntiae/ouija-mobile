@@ -68,6 +68,18 @@ class ChatActivity : BaseActivity() {
         chatId = intent.getStringExtra("CHAT_ID") ?: ""
         val chatName = intent.getStringExtra("CHAT_NAME") ?: "Chat"
 
+        // Parse sender info: "userId::nickname::avatarUrl|userId::nickname::avatarUrl"
+        val senderMap = mutableMapOf<String, Pair<String, String?>>() // userId -> (nickname, avatarUrl?)
+        intent.getStringExtra("CHAT_USERS")?.split("|")?.forEach { entry ->
+            val parts = entry.split("::")
+            if (parts.size >= 2) {
+                val uid = parts[0]
+                val nick = parts[1]
+                val av = parts.getOrNull(2)?.ifEmpty { null }
+                senderMap[uid] = Pair(nick, av)
+            }
+        }
+
         val btnBack        = findViewById<ImageButton>(R.id.btnBack)
         val tvChatName     = findViewById<TextView>(R.id.tvChatName)
         val tvChatInitials = findViewById<TextView>(R.id.tvChatInitials)
@@ -91,7 +103,7 @@ class ChatActivity : BaseActivity() {
         val btnAttach = findViewById<ImageButton>(R.id.btnAttach)
 
         val myId = sessionManager.getUserId() ?: ""
-        adapter = MessageAdapter(myId, this)
+        adapter = MessageAdapter(myId, this, senderMap)
         recycler.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         recycler.adapter = adapter
 
@@ -262,8 +274,11 @@ class ChatActivity : BaseActivity() {
 
 // ── MessageAdapter ─────────────────────────────────────────────────────────────
 
-class MessageAdapter(private val myUserId: String, private val context: Context) :
-    RecyclerView.Adapter<MessageAdapter.ViewHolder>() {
+class MessageAdapter(
+    private val myUserId: String,
+    private val context: Context,
+    private val senderMap: Map<String, Pair<String, String?>> = emptyMap()
+) : RecyclerView.Adapter<MessageAdapter.ViewHolder>() {
 
     private val messages = mutableListOf<Message>()
 
@@ -303,7 +318,7 @@ class MessageAdapter(private val myUserId: String, private val context: Context)
         val layout = if (viewType == VIEW_TYPE_SENT) R.layout.item_message_sent
         else R.layout.item_message_received
         val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
-        return ViewHolder(view, context)
+        return ViewHolder(view, context, senderMap)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -312,94 +327,114 @@ class MessageAdapter(private val myUserId: String, private val context: Context)
 
     override fun getItemCount() = messages.size
 
-    class ViewHolder(view: View, private val context: Context) : RecyclerView.ViewHolder(view) {
+    class ViewHolder(
+        view: View,
+        private val context: Context,
+        private val senderMap: Map<String, Pair<String, String?>> = emptyMap()
+    ) : RecyclerView.ViewHolder(view) {
         private val tvContent        = view.findViewById<TextView>(R.id.tvContent)
         private val tvTime           = view.findViewById<TextView>(R.id.tvTime)
-        private val flImageAttachment = view.findViewById<FrameLayout>(R.id.flImageAttachment)
-        private val ivAttachment     = view.findViewById<ImageView>(R.id.ivAttachment)
-        private val btnDownloadImage = view.findViewById<TextView>(R.id.btnDownloadImage)
-        private val llAttachmentFile = view.findViewById<LinearLayout>(R.id.llAttachmentFile)
-        private val tvAttachmentFile = view.findViewById<TextView>(R.id.tvAttachmentFile)
-        private val btnDownload      = view.findViewById<TextView>(R.id.btnDownload)
+        private val flImageAttachment = view.findViewById<FrameLayout?>(R.id.flImageAttachment)
+        private val ivAttachment     = view.findViewById<ImageView?>(R.id.ivAttachment)
+        private val btnDownloadImage = view.findViewById<TextView?>(R.id.btnDownloadImage)
+        private val llAttachmentFile = view.findViewById<LinearLayout?>(R.id.llAttachmentFile)
+        private val tvAttachmentFile = view.findViewById<TextView?>(R.id.tvAttachmentFile)
+        private val btnDownload      = view.findViewById<TextView?>(R.id.btnDownload)
+        // Only in received layout:
+        private val tvSenderName     = view.findViewById<TextView?>(R.id.tvSenderName)
+        private val tvSenderInitials = view.findViewById<TextView?>(R.id.tvSenderInitials)
+        private val ivSenderAvatar   = view.findViewById<ImageView?>(R.id.ivSenderAvatar)
 
         fun bind(message: Message) {
             tvContent.text = message.content ?: ""
             tvContent.visibility = if (message.content.isNullOrEmpty()) View.GONE else View.VISIBLE
             tvTime.text = if (message.sentAt.length >= 16) message.sentAt.substring(11, 16) else message.sentAt
 
+            // Show sender info (only in received layout — views are null in sent)
+            val sender = senderMap[message.senderId]
+            tvSenderName?.let { tv ->
+                tv.text = sender?.first ?: message.senderId.take(8)
+                tv.visibility = View.VISIBLE
+            }
+            tvSenderInitials?.let { tv ->
+                tv.text = (sender?.first ?: "?").take(2).uppercase()
+                tv.visibility = View.VISIBLE
+            }
+            ivSenderAvatar?.visibility = View.GONE
+            val senderAvatarUrl = sender?.second
+            if (senderAvatarUrl != null && ivSenderAvatar != null && tvSenderInitials != null) {
+                loadBitmapAsync(senderAvatarUrl) { bmp ->
+                    ivSenderAvatar.setImageBitmap(bmp)
+                    ivSenderAvatar.visibility   = View.VISIBLE
+                    tvSenderInitials.visibility = View.GONE
+                }
+            }
+
             val firstAttachment = message.attachments.firstOrNull()
             if (firstAttachment != null) {
                 when (firstAttachment.type) {
                     "IMAGE" -> {
-                        flImageAttachment.visibility = View.VISIBLE
-                        llAttachmentFile.visibility = View.GONE
-                        loadImageIntoView(ivAttachment, firstAttachment.url)
-                        btnDownloadImage.setOnClickListener {
+                        flImageAttachment?.visibility = View.VISIBLE
+                        llAttachmentFile?.visibility = View.GONE
+                        ivAttachment?.let { loadBitmapAsync(firstAttachment.url) { bmp -> it.setImageBitmap(bmp) } }
+                        btnDownloadImage?.setOnClickListener {
                             downloadFile(context, firstAttachment.url, firstAttachment.name ?: "image.jpg")
                         }
                     }
                     else -> {
-                        flImageAttachment.visibility = View.GONE
-                        llAttachmentFile.visibility = View.VISIBLE
+                        flImageAttachment?.visibility = View.GONE
+                        llAttachmentFile?.visibility = View.VISIBLE
                         val icon = when (firstAttachment.type) {
                             "VIDEO" -> "🎥"
                             "AUDIO" -> "🎵"
                             else    -> "📎"
                         }
-                        tvAttachmentFile.text = "$icon ${firstAttachment.name ?: "plik"}"
-                        btnDownload.setOnClickListener {
+                        tvAttachmentFile?.text = "$icon ${firstAttachment.name ?: "plik"}"
+                        btnDownload?.setOnClickListener {
                             downloadFile(context, firstAttachment.url, firstAttachment.name ?: "plik")
                         }
                     }
                 }
             } else {
-                flImageAttachment.visibility = View.GONE
-                llAttachmentFile.visibility = View.GONE
+                flImageAttachment?.visibility = View.GONE
+                llAttachmentFile?.visibility = View.GONE
             }
         }
 
-        private fun loadImageIntoView(imageView: ImageView, url: String) {
-            val executor = Executors.newSingleThreadExecutor()
-            executor.execute {
+        private fun loadBitmapAsync(url: String, onLoaded: (Bitmap) -> Unit) {
+            Executors.newSingleThreadExecutor().execute {
                 try {
-                    val inputStream: InputStream = URL(url).openStream()
-                    val bitmap: Bitmap = BitmapFactory.decodeStream(inputStream)
-                    imageView.post { imageView.setImageBitmap(bitmap) }
-                } catch (_: Exception) {
-                    imageView.post { flImageAttachment?.visibility = View.GONE }
-                }
+                    val bmp = BitmapFactory.decodeStream(URL(url).openStream())
+                    itemView.post { onLoaded(bmp) }
+                } catch (_: Exception) {}
             }
         }
 
         private fun downloadFile(context: Context, url: String, filename: String) {
             Toast.makeText(context, "Pobieranie: $filename…", Toast.LENGTH_SHORT).show()
-            val executor = Executors.newSingleThreadExecutor()
-            executor.execute {
+            Executors.newSingleThreadExecutor().execute {
                 try {
-                    val inputStream: InputStream = URL(url).openStream()
-                    val bytes = inputStream.readBytes()
-
+                    val bytes = URL(url).openStream().readBytes()
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         val mimeType = when {
-                            filename.endsWith(".jpg", ignoreCase = true) || filename.endsWith(".jpeg", ignoreCase = true) -> "image/jpeg"
-                            filename.endsWith(".png", ignoreCase = true) -> "image/png"
-                            filename.endsWith(".gif", ignoreCase = true) -> "image/gif"
-                            filename.endsWith(".mp4", ignoreCase = true) -> "video/mp4"
-                            filename.endsWith(".mp3", ignoreCase = true) -> "audio/mpeg"
-                            filename.endsWith(".pdf", ignoreCase = true) -> "application/pdf"
+                            filename.endsWith(".jpg", true) || filename.endsWith(".jpeg", true) -> "image/jpeg"
+                            filename.endsWith(".png", true) -> "image/png"
+                            filename.endsWith(".gif", true) -> "image/gif"
+                            filename.endsWith(".mp4", true) -> "video/mp4"
+                            filename.endsWith(".mp3", true) -> "audio/mpeg"
+                            filename.endsWith(".pdf", true) -> "application/pdf"
                             else -> "application/octet-stream"
                         }
                         val isImage = mimeType.startsWith("image/")
                         val isVideo = mimeType.startsWith("video/")
                         val isAudio = mimeType.startsWith("audio/")
-
                         val collection = when {
                             isImage -> MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
                             isVideo -> MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
                             isAudio -> MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
                             else    -> MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
                         }
-                        val relativeDir = when {
+                        val relDir = when {
                             isImage -> Environment.DIRECTORY_PICTURES
                             isVideo -> Environment.DIRECTORY_MOVIES
                             isAudio -> Environment.DIRECTORY_MUSIC
@@ -408,26 +443,22 @@ class MessageAdapter(private val myUserId: String, private val context: Context)
                         val values = ContentValues().apply {
                             put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
                             put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-                            put(MediaStore.MediaColumns.RELATIVE_PATH, "$relativeDir/Ouija")
+                            put(MediaStore.MediaColumns.RELATIVE_PATH, "$relDir/Ouija")
                         }
                         val uri = context.contentResolver.insert(collection, values)
-                        uri?.let {
-                            context.contentResolver.openOutputStream(it)?.use { os -> os.write(bytes) }
-                        }
+                        uri?.let { context.contentResolver.openOutputStream(it)?.use { os -> os.write(bytes) } }
                     } else {
                         @Suppress("DEPRECATION")
                         val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Ouija")
                         dir.mkdirs()
-                        val file = File(dir, filename)
-                        FileOutputStream(file).use { it.write(bytes) }
+                        FileOutputStream(File(dir, filename)).use { it.write(bytes) }
                     }
-
-                    (context as? android.app.Activity)?.runOnUiThread {
+                    (context as? Activity)?.runOnUiThread {
                         Toast.makeText(context, "Zapisano: $filename", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
-                    (context as? android.app.Activity)?.runOnUiThread {
-                        Toast.makeText(context, "Błąd pobierania: ${e.message}", Toast.LENGTH_LONG).show()
+                    (context as? Activity)?.runOnUiThread {
+                        Toast.makeText(context, "Błąd: ${e.message}", Toast.LENGTH_LONG).show()
                     }
                 }
             }

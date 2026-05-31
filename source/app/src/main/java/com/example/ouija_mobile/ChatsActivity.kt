@@ -44,9 +44,15 @@ class ChatsActivity : BaseActivity() {
             val displayName = getChatDisplayName(chat)
             val myId = sessionManager.getUserId()
             val otherUser = chat.users.firstOrNull { it.userId != myId }?.user
+            // Serialize users for MessageAdapter: id -> nickname,avatarUrl
+            val usersJson = chat.users.joinToString("|") { cu ->
+                val u = cu.user ?: return@joinToString ""
+                "${cu.userId}::${u.nickname}::${u.avatarUrl ?: ""}"
+            }
             startActivity(Intent(this, ChatActivity::class.java).apply {
                 putExtra("CHAT_ID", chat.id)
                 putExtra("CHAT_NAME", displayName)
+                putExtra("CHAT_USERS", usersJson)
                 if (otherUser?.avatarUrl != null) {
                     putExtra("CHAT_AVATAR_URL", otherUser.avatarUrl)
                 }

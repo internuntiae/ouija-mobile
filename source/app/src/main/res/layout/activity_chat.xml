@@ -48,6 +48,7 @@
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
                 android:background="@drawable/bg_avatar"
+                android:clipToOutline="true"
                 android:visibility="gone"
                 android:contentDescription="Avatar rozmówcy"/>
 

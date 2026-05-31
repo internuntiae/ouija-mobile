@@ -9,15 +9,32 @@
     android:gravity="center_vertical"
     android:background="?attr/customSurface">
 
-    <TextView
-        android:id="@+id/tvInitials"
+    <!-- Avatar kółko -->
+    <FrameLayout
         android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="@drawable/bg_avatar"
-        android:gravity="center"
-        android:textColor="?attr/customTextPrimary"
-        android:textSize="14sp"
-        android:fontFamily="sans-serif-medium"/>
+        android:layout_height="40dp">
+
+        <TextView
+            android:id="@+id/tvInitials"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_avatar"
+            android:gravity="center"
+            android:textColor="?attr/customTextPrimary"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium"/>
+
+        <ImageView
+            android:id="@+id/ivAvatar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:background="@drawable/bg_avatar"
+            android:clipToOutline="true"
+            android:visibility="gone"
+            android:contentDescription="Avatar znajomego"/>
+
+    </FrameLayout>
 
     <TextView
         android:id="@+id/tvName"

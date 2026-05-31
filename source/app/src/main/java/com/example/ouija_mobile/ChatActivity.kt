@@ -52,7 +52,7 @@ class ChatActivity : AppCompatActivity() {
         apiClient.getMessages(chatId,
             onSuccess = { messages ->
                 runOnUiThread {
-                    adapter.setMessages(messages)
+                    adapter.setMessages(messages.reversed())
                     recycler.scrollToPosition(adapter.itemCount - 1)
                 }
             },

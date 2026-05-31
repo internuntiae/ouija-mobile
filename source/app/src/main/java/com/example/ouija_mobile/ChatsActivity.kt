@@ -2,9 +2,12 @@ package com.example.ouija_mobile
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -12,11 +15,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
-class ChatsActivity : AppCompatActivity() {
+class ChatsActivity : BaseActivity() {
 
     private lateinit var sessionManager: SessionManager
     private lateinit var apiClient: ApiClient
     private lateinit var adapter: ChatAdapter
+    private var allChats: List<Chat> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,17 +31,34 @@ class ChatsActivity : AppCompatActivity() {
 
         val recycler = findViewById<RecyclerView>(R.id.recyclerChats)
         val emptyView = findViewById<TextView>(R.id.tvEmpty)
+        val searchView = findViewById<EditText>(R.id.etSearch)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
 
-        adapter = ChatAdapter { chat ->
+        adapter = ChatAdapter(sessionManager.getUserId() ?: "") { chat ->
+            val displayName = getChatDisplayName(chat)
             startActivity(Intent(this, ChatActivity::class.java).apply {
                 putExtra("CHAT_ID", chat.id)
-                putExtra("CHAT_NAME", getChatDisplayName(chat))
+                putExtra("CHAT_NAME", displayName)
             })
         }
 
         recycler.layoutManager = LinearLayoutManager(this)
         recycler.adapter = adapter
+
+        // Live search filter
+        searchView.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString()?.trim() ?: ""
+                val filtered = if (query.isEmpty()) allChats
+                else allChats.filter { chat ->
+                    getChatDisplayName(chat).contains(query, ignoreCase = true)
+                }
+                adapter.setChats(filtered)
+                emptyView.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+            }
+        })
 
         bottomNav.selectedItemId = R.id.nav_chats
         bottomNav.setOnItemSelectedListener { item ->
@@ -64,6 +85,7 @@ class ChatsActivity : AppCompatActivity() {
         val userId = sessionManager.getUserId() ?: return
         apiClient.getChats(userId,
             onSuccess = { chats ->
+                allChats = chats
                 runOnUiThread {
                     adapter.setChats(chats)
                     emptyView.visibility = if (chats.isEmpty()) View.VISIBLE else View.GONE
@@ -80,13 +102,16 @@ class ChatsActivity : AppCompatActivity() {
     private fun getChatDisplayName(chat: Chat): String {
         if (!chat.name.isNullOrEmpty()) return chat.name
         val myId = sessionManager.getUserId()
-        val otherUser = chat.users.firstOrNull { it.userId != myId }
-        return otherUser?.userId ?: "Chat"
+        val otherChatUser = chat.users.firstOrNull { it.userId != myId }
+        // Use the nested user's nickname when available
+        return otherChatUser?.user?.nickname ?: otherChatUser?.userId ?: "Chat"
     }
 }
 
-class ChatAdapter(private val onClick: (Chat) -> Unit) :
-    RecyclerView.Adapter<ChatAdapter.ViewHolder>() {
+class ChatAdapter(
+    private val myUserId: String,
+    private val onClick: (Chat) -> Unit
+) : RecyclerView.Adapter<ChatAdapter.ViewHolder>() {
 
     private val chats = mutableListOf<Chat>()
 
@@ -102,7 +127,7 @@ class ChatAdapter(private val onClick: (Chat) -> Unit) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(chats[position], onClick)
+        holder.bind(chats[position], myUserId, onClick)
     }
 
     override fun getItemCount() = chats.size
@@ -112,9 +137,13 @@ class ChatAdapter(private val onClick: (Chat) -> Unit) :
         private val tvName = view.findViewById<TextView>(R.id.tvChatName)
         private val tvType = view.findViewById<TextView>(R.id.tvChatType)
 
-        fun bind(chat: Chat, onClick: (Chat) -> Unit) {
-            val displayName = if (!chat.name.isNullOrEmpty()) chat.name
-            else "Prywatna rozmowa"
+        fun bind(chat: Chat, myUserId: String, onClick: (Chat) -> Unit) {
+            val displayName = if (!chat.name.isNullOrEmpty()) {
+                chat.name
+            } else {
+                val other = chat.users.firstOrNull { it.userId != myUserId }
+                other?.user?.nickname ?: "Prywatna rozmowa"
+            }
             tvName.text = displayName
             tvType.text = if (chat.type == "GROUP") "Grupa" else "Prywatna"
             tvInitials.text = displayName.take(2).uppercase()

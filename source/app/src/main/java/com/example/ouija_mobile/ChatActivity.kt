@@ -2,7 +2,6 @@ package com.example.ouija_mobile
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
@@ -13,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class ChatActivity : AppCompatActivity() {
+class ChatActivity : BaseActivity() {
 
     private lateinit var sessionManager: SessionManager
     private lateinit var apiClient: ApiClient
@@ -34,10 +33,14 @@ class ChatActivity : AppCompatActivity() {
         chatId = intent.getStringExtra("CHAT_ID") ?: ""
         val chatName = intent.getStringExtra("CHAT_NAME") ?: "Chat"
 
-        supportActionBar?.apply {
-            title = chatName
-            setDisplayHomeAsUpEnabled(true)
-        }
+        // Custom top bar
+        val btnBack = findViewById<ImageButton>(R.id.btnBack)
+        val tvChatName = findViewById<TextView>(R.id.tvChatName)
+        val tvChatInitials = findViewById<TextView>(R.id.tvChatInitials)
+
+        tvChatName.text = chatName
+        tvChatInitials.text = chatName.take(2).uppercase()
+        btnBack.setOnClickListener { finish() }
 
         recycler = findViewById(R.id.recyclerMessages)
         val etMessage = findViewById<EditText>(R.id.etMessage)
@@ -48,7 +51,6 @@ class ChatActivity : AppCompatActivity() {
         recycler.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         recycler.adapter = adapter
 
-        // Załaduj historię wiadomości
         apiClient.getMessages(chatId,
             onSuccess = { messages ->
                 runOnUiThread {
@@ -61,7 +63,6 @@ class ChatActivity : AppCompatActivity() {
             }
         )
 
-        // WebSocket — nowa wiadomość
         wsClient.onMessageReceived = { message ->
             runOnUiThread {
                 adapter.addMessage(message)
@@ -69,18 +70,12 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
-        // WebSocket — edycja wiadomości
         wsClient.onMessageUpdated = { message ->
-            runOnUiThread {
-                adapter.updateMessage(message)
-            }
+            runOnUiThread { adapter.updateMessage(message) }
         }
 
-        // WebSocket — usunięcie wiadomości
         wsClient.onMessageDeleted = { messageId ->
-            runOnUiThread {
-                adapter.removeMessage(messageId)
-            }
+            runOnUiThread { adapter.removeMessage(messageId) }
         }
 
         wsClient.connect(chatId)
@@ -90,12 +85,8 @@ class ChatActivity : AppCompatActivity() {
             if (text.isEmpty()) return@setOnClickListener
             etMessage.setText("")
 
-            // senderId is NOT passed — backend reads it from the Bearer token
             apiClient.sendMessage(chatId, text,
                 onSuccess = { message ->
-                    // Backend roześle przez WS do wszystkich członków czatu (łącznie z nami),
-                    // więc addMessage() zostanie wywołane przez onMessageReceived.
-                    // Na wypadek gdyby WS nie działał — dodajemy ręcznie (addMessage deduplikuje).
                     runOnUiThread {
                         adapter.addMessage(message)
                         recycler.scrollToPosition(adapter.itemCount - 1)
@@ -106,11 +97,6 @@ class ChatActivity : AppCompatActivity() {
                 }
             )
         }
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) { finish(); return true }
-        return super.onOptionsItemSelected(item)
     }
 
     override fun onDestroy() {
@@ -131,7 +117,6 @@ class MessageAdapter(private val myUserId: String) :
     }
 
     fun addMessage(message: Message) {
-        // Deduplication — nie dodawaj jeśli już mamy (np. echo własnej wiadomości przez WS)
         if (messages.none { it.id == message.id }) {
             messages.add(message)
             notifyItemInserted(messages.size - 1)
@@ -176,7 +161,6 @@ class MessageAdapter(private val myUserId: String) :
 
         fun bind(message: Message) {
             tvContent.text = message.content ?: ""
-            // Bezpieczne wycinanie HH:mm — sentAt może być ISO-8601 lub skrócone
             tvTime.text = if (message.sentAt.length >= 16) message.sentAt.substring(11, 16) else message.sentAt
         }
     }

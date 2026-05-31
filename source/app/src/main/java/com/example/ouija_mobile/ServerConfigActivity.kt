@@ -19,7 +19,7 @@ private data class UrlsResponse(
     @SerializedName("media") val media: String
 )
 
-class ServerConfigActivity : AppCompatActivity() {
+class ServerConfigActivity : BaseActivity() {
 
     private lateinit var sessionManager: SessionManager
     private val client = OkHttpClient()

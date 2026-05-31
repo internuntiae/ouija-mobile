@@ -25,8 +25,9 @@ class SessionManager(context: Context) {
         private const val KEY_USER_ID    = "user_id"
         private const val KEY_NICKNAME   = "nickname"
         private const val KEY_EMAIL      = "email"
-        private const val KEY_TOKEN      = "session_token" // Bearer token from /api/auth/login
+        private const val KEY_TOKEN      = "session_token"
         private const val KEY_AVATAR_URL = "avatar_url"
+        private const val KEY_THEME      = "app_theme"
     }
 
     fun saveSession(userId: String, nickname: String, email: String, token: String, avatarUrl: String?) {
@@ -59,7 +60,21 @@ class SessionManager(context: Context) {
 
     fun isLoggedIn(): Boolean = getUserId() != null && getToken() != null
 
+    /** Saves the theme key, e.g. "Theme.Ouija.Midnight" */
+    fun saveTheme(themeKey: String) = prefs.edit().putString(KEY_THEME, themeKey).apply()
+    fun getTheme(): String = prefs.getString(KEY_THEME, "Theme.Ouija") ?: "Theme.Ouija"
+
     fun clearSession() {
+        val theme = getTheme()          // preserve theme across logout
+        val apiUrl = getApiUrl()
+        val webUrl = getServerUrl()
+        val mediaUrl = getMediaUrl()
         prefs.edit().clear().apply()
+        // restore non-auth prefs
+        prefs.edit()
+            .putString(KEY_THEME, theme)
+            .apply()
+        if (apiUrl != null && webUrl != null && mediaUrl != null)
+            saveServerUrls(webUrl, apiUrl, mediaUrl!!)
     }
 }

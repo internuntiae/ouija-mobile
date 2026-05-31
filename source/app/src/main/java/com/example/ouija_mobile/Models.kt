@@ -18,7 +18,8 @@ data class Chat(
 data class ChatUser(
     val chatId: String,
     val userId: String,
-    val role: String
+    val role: String,
+    val user: User?
 )
 
 data class Message(
@@ -30,13 +31,22 @@ data class Message(
     val editedAt: String?
 )
 
+// Friendship returned by GET /api/users/:userId/friends
+// { userId, friendId, status, user: User, friend: User }
+data class Friendship(
+    val userId: String,
+    val friendId: String,
+    val status: String,   // PENDING | ACCEPTED | BLOCKED
+    val user: User,
+    val friend: User
+)
+
 data class RegisterRequest(
     val email: String,
     val password: String,
     val nickname: String
 )
 
-// Backend /api/auth/login accepts nickname + password (not email)
 data class LoginRequest(
     val nickname: String,
     val password: String
@@ -47,7 +57,6 @@ data class LoginResponse(
     val user: User
 )
 
-// senderId is NOT sent — backend reads it from the session token
 data class SendMessageRequest(
     val content: String
 )

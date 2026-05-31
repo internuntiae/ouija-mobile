@@ -28,179 +28,141 @@ class ApiClient(private val sessionManager: SessionManager) {
     private val gson = Gson()
     private val client = OkHttpClient()
 
-    /** Adds Authorization: Bearer <token> header to every authenticated request. */
     private fun buildRequest(url: String): Request.Builder {
         val token = sessionManager.getToken() ?: ""
-        return Request.Builder()
-            .url(url)
-            .header("Authorization", "Bearer $token")
+        return Request.Builder().url(url).header("Authorization", "Bearer $token")
     }
 
-    // ── Auth ─────────────────────────────────────────────────────────────────
+    // ── Auth ──────────────────────────────────────────────────────────────────
 
-    fun register(
-        email: String,
-        password: String,
-        nickname: String,
-        onSuccess: (User) -> Unit,
-        onError: (String) -> Unit
-    ) {
-        val body = gson.toJson(RegisterRequest(email, password, nickname))
-            .toRequestBody(JSON)
-        // POST /api/auth/register — no auth header needed
-        val request = Request.Builder()
-            .url("$baseUrl/auth/register")
-            .post(body)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
+    fun register(email: String, password: String, nickname: String,
+                 onSuccess: (User) -> Unit, onError: (String) -> Unit) {
+        val body = gson.toJson(RegisterRequest(email, password, nickname)).toRequestBody(JSON)
+        val req = Request.Builder().url("$baseUrl/auth/register").post(body).build()
+        client.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {
-                val bodyStr = response.body?.string() ?: ""
-                if (response.isSuccessful) {
-                    runCatching { gson.fromJson(bodyStr, User::class.java) }
-                        .onSuccess(onSuccess)
-                        .onFailure { onError("Parse error") }
-                } else {
-                    val errMsg = runCatching {
-                        gson.fromJson(bodyStr, ErrorResponse::class.java).error
-                    }.getOrNull() ?: "Error ${response.code}"
-                    onError(errMsg)
-                }
+                val s = response.body?.string() ?: ""
+                if (response.isSuccessful) runCatching { gson.fromJson(s, User::class.java) }.onSuccess(onSuccess).onFailure { onError("Parse error") }
+                else onError(runCatching { gson.fromJson(s, ErrorResponse::class.java).error }.getOrNull() ?: "Error ${response.code}")
             }
         })
     }
 
-    /**
-     * POST /api/auth/login
-     * Body: { nickname, password }
-     * Returns: { token, user }
-     *
-     * Note: the backend logs in with NICKNAME, not email.
-     */
-    fun login(
-        nickname: String,
-        password: String,
-        onSuccess: (LoginResponse) -> Unit,
-        onError: (String) -> Unit
-    ) {
+    fun login(nickname: String, password: String,
+              onSuccess: (LoginResponse) -> Unit, onError: (String) -> Unit) {
         val body = gson.toJson(LoginRequest(nickname, password)).toRequestBody(JSON)
-        val request = Request.Builder()
-            .url("$baseUrl/auth/login")
-            .post(body)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
+        val req = Request.Builder().url("$baseUrl/auth/login").post(body).build()
+        client.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {
-                val bodyStr = response.body?.string() ?: ""
-                if (response.isSuccessful) {
-                    runCatching { gson.fromJson(bodyStr, LoginResponse::class.java) }
-                        .onSuccess(onSuccess)
-                        .onFailure { onError("Parse error") }
-                } else {
-                    val errMsg = runCatching {
-                        gson.fromJson(bodyStr, ErrorResponse::class.java).error
-                    }.getOrNull() ?: if (response.code == 401) "Invalid credentials" else "Error ${response.code}"
-                    onError(errMsg)
-                }
+                val s = response.body?.string() ?: ""
+                if (response.isSuccessful) runCatching { gson.fromJson(s, LoginResponse::class.java) }.onSuccess(onSuccess).onFailure { onError("Parse error") }
+                else onError(runCatching { gson.fromJson(s, ErrorResponse::class.java).error }.getOrNull() ?: if (response.code == 401) "Invalid credentials" else "Error ${response.code}")
             }
         })
     }
 
-    /** POST /api/auth/logout */
     fun logout(onComplete: () -> Unit) {
-        val request = buildRequest("$baseUrl/auth/logout").post("".toRequestBody(JSON)).build()
-        client.newCall(request).enqueue(object : Callback {
+        val req = buildRequest("$baseUrl/auth/logout").post("".toRequestBody(JSON)).build()
+        client.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onComplete()
             override fun onResponse(call: Call, response: Response) = onComplete()
         })
     }
 
-    // ── Users ────────────────────────────────────────────────────────────────
+    // ── Users ─────────────────────────────────────────────────────────────────
 
-    /** GET /api/users?id=<userId> */
     fun getUser(userId: String, onSuccess: (User) -> Unit, onError: (String) -> Unit) {
-        val request = buildRequest("$baseUrl/users?id=$userId").get().build()
-        client.newCall(request).enqueue(object : Callback {
+        val req = buildRequest("$baseUrl/users?id=$userId").get().build()
+        client.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {
-                val bodyStr = response.body?.string() ?: ""
-                if (response.isSuccessful) {
-                    runCatching { gson.fromJson(bodyStr, User::class.java) }
-                        .onSuccess(onSuccess)
-                        .onFailure { onError("Parse error") }
-                } else {
-                    onError("Error ${response.code}")
-                }
+                val s = response.body?.string() ?: ""
+                if (response.isSuccessful) runCatching { gson.fromJson(s, User::class.java) }.onSuccess(onSuccess).onFailure { onError("Parse error") }
+                else onError("Error ${response.code}")
             }
         })
     }
 
-    // ── Chats ────────────────────────────────────────────────────────────────
+    fun searchUsers(query: String, onSuccess: (List<User>) -> Unit, onError: (String) -> Unit) {
+        val enc = java.net.URLEncoder.encode(query, "UTF-8")
+        val req = buildRequest("$baseUrl/users?q=$enc").get().build()
+        client.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
+            override fun onResponse(call: Call, response: Response) {
+                val s = response.body?.string() ?: ""
+                if (response.isSuccessful) runCatching {
+                    val t = object : TypeToken<List<User>>() {}.type
+                    gson.fromJson<List<User>>(s, t)
+                }.onSuccess(onSuccess).onFailure { onError("Parse error") }
+                else onError("Error ${response.code}")
+            }
+        })
+    }
 
-    /** GET /api/users/<userId>/chats */
+    // ── Friends ───────────────────────────────────────────────────────────────
+
+    /** GET /api/users/:userId/friends */
+    fun getFriends(userId: String, onSuccess: (List<Friendship>) -> Unit, onError: (String) -> Unit) {
+        val req = buildRequest("$baseUrl/users/$userId/friends").get().build()
+        client.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
+            override fun onResponse(call: Call, response: Response) {
+                val s = response.body?.string() ?: ""
+                if (response.isSuccessful) runCatching {
+                    val t = object : TypeToken<List<Friendship>>() {}.type
+                    gson.fromJson<List<Friendship>>(s, t)
+                }.onSuccess(onSuccess).onFailure { onError("Parse error") }
+                else onError("Error ${response.code}")
+            }
+        })
+    }
+
+    // ── Chats ─────────────────────────────────────────────────────────────────
+
     fun getChats(userId: String, onSuccess: (List<Chat>) -> Unit, onError: (String) -> Unit) {
-        val request = buildRequest("$baseUrl/users/$userId/chats").get().build()
-        client.newCall(request).enqueue(object : Callback {
+        val req = buildRequest("$baseUrl/users/$userId/chats").get().build()
+        client.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {
-                val bodyStr = response.body?.string() ?: ""
-                if (response.isSuccessful) {
-                    runCatching {
-                        val type = object : TypeToken<List<Chat>>() {}.type
-                        gson.fromJson<List<Chat>>(bodyStr, type)
-                    }.onSuccess(onSuccess).onFailure { onError("Parse error") }
-                } else {
-                    onError("Error ${response.code}")
-                }
+                val s = response.body?.string() ?: ""
+                if (response.isSuccessful) runCatching {
+                    val t = object : TypeToken<List<Chat>>() {}.type
+                    gson.fromJson<List<Chat>>(s, t)
+                }.onSuccess(onSuccess).onFailure { onError("Parse error") }
+                else onError("Error ${response.code}")
             }
         })
     }
 
-    // ── Messages ─────────────────────────────────────────────────────────────
+    // ── Messages ──────────────────────────────────────────────────────────────
 
-    /** GET /api/chats/<chatId>/messages */
     fun getMessages(chatId: String, onSuccess: (List<Message>) -> Unit, onError: (String) -> Unit) {
-        val request = buildRequest("$baseUrl/chats/$chatId/messages").get().build()
-        client.newCall(request).enqueue(object : Callback {
+        val req = buildRequest("$baseUrl/chats/$chatId/messages").get().build()
+        client.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {
-                val bodyStr = response.body?.string() ?: ""
-                if (response.isSuccessful) {
-                    runCatching {
-                        val type = object : TypeToken<List<Message>>() {}.type
-                        gson.fromJson<List<Message>>(bodyStr, type)
-                    }.onSuccess(onSuccess).onFailure { onError("Parse error") }
-                } else {
-                    onError("Error ${response.code}")
-                }
+                val s = response.body?.string() ?: ""
+                if (response.isSuccessful) runCatching {
+                    val t = object : TypeToken<List<Message>>() {}.type
+                    gson.fromJson<List<Message>>(s, t)
+                }.onSuccess(onSuccess).onFailure { onError("Parse error") }
+                else onError("Error ${response.code}")
             }
         })
     }
 
-    /**
-     * POST /api/chats/<chatId>/messages
-     * Body: { content }  — senderId is NOT sent; backend reads it from the Bearer token.
-     */
-    fun sendMessage(
-        chatId: String,
-        content: String,
-        onSuccess: (Message) -> Unit,
-        onError: (String) -> Unit
-    ) {
+    fun sendMessage(chatId: String, content: String,
+                    onSuccess: (Message) -> Unit, onError: (String) -> Unit) {
         val body = gson.toJson(SendMessageRequest(content)).toRequestBody(JSON)
-        val request = buildRequest("$baseUrl/chats/$chatId/messages").post(body).build()
-        client.newCall(request).enqueue(object : Callback {
+        val req = buildRequest("$baseUrl/chats/$chatId/messages").post(body).build()
+        client.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {
-                val bodyStr = response.body?.string() ?: ""
-                if (response.isSuccessful) {
-                    runCatching { gson.fromJson(bodyStr, Message::class.java) }
-                        .onSuccess(onSuccess).onFailure { onError("Parse error") }
-                } else {
-                    onError("Error ${response.code}")
-                }
+                val s = response.body?.string() ?: ""
+                if (response.isSuccessful) runCatching { gson.fromJson(s, Message::class.java) }.onSuccess(onSuccess).onFailure { onError("Parse error") }
+                else onError("Error ${response.code}")
             }
         })
     }

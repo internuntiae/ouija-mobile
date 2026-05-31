@@ -7,62 +7,198 @@
     android:orientation="vertical"
     android:background="?attr/customWindowBackground">
 
-    <!-- Header -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:paddingTop="40dp"
-        android:paddingBottom="28dp"
-        android:background="?attr/customSurface">
-
-        <TextView
-            android:id="@+id/tvInitials"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:background="@drawable/bg_avatar_large"
-            android:gravity="center"
-            android:textColor="?attr/customTextPrimary"
-            android:textSize="28sp"
-            android:fontFamily="sans-serif-medium"/>
-
-        <TextView
-            android:id="@+id/tvNickname"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="?attr/customTextPrimary"
-            android:textSize="20sp"
-            android:fontFamily="sans-serif-medium"
-            android:layout_marginTop="14dp"/>
-
-        <TextView
-            android:id="@+id/tvEmail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="?attr/customTextSecondary"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp"/>
-
-    </LinearLayout>
-
-    <!-- Spacer -->
-    <View
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_weight="1"
+        android:fillViewport="true">
 
-    <!-- Logout -->
-    <Button
-        android:id="@+id/btnLogout"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginBottom="16dp"
-        android:text="@string/btn_logout"
-        android:textColor="?attr/customTextPrimary"
-        android:background="@drawable/bg_button_danger"
-        android:textSize="15sp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ── User card ─────────────────────────────────────── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingTop="36dp"
+                android:paddingBottom="24dp"
+                android:background="?attr/customSurface">
+
+                <TextView
+                    android:id="@+id/tvInitials"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:background="@drawable/bg_avatar_large"
+                    android:gravity="center"
+                    android:textColor="?attr/customTextPrimary"
+                    android:textSize="28sp"
+                    android:fontFamily="sans-serif-medium"/>
+
+                <TextView
+                    android:id="@+id/tvNickname"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/customTextPrimary"
+                    android:textSize="20sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginTop="14dp"/>
+
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/customTextSecondary"
+                    android:textSize="13sp"
+                    android:layout_marginTop="4dp"/>
+
+                <TextView
+                    android:id="@+id/tvEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/customTextSecondary"
+                    android:textSize="13sp"
+                    android:layout_marginTop="2dp"/>
+
+            </LinearLayout>
+
+            <!-- ── Znajomi ──────────────────────────────────────── -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Znajomi"
+                android:textColor="?attr/customTextSecondary"
+                android:textSize="12sp"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="16dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="6dp"
+                android:letterSpacing="0.08"/>
+
+            <TextView
+                android:id="@+id/tvFriendsEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Brak znajomych"
+                android:textColor="?attr/customTextSecondary"
+                android:textSize="14sp"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:visibility="gone"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerFriends"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"/>
+
+            <!-- ── Ustawienia ────────────────────────────────────── -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ustawienia"
+                android:textColor="?attr/customTextSecondary"
+                android:textSize="12sp"
+                android:fontFamily="sans-serif-medium"
+                android:paddingHorizontal="16dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="6dp"
+                android:letterSpacing="0.08"/>
+
+            <!-- Server URL row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="?attr/customSurface"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Adres serwera"
+                    android:textColor="?attr/customTextPrimary"
+                    android:textSize="15sp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp">
+
+                    <TextView
+                        android:id="@+id/tvCurrentUrl"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="?attr/customTextSecondary"
+                        android:textSize="13sp"
+                        android:singleLine="true"
+                        android:ellipsize="end"/>
+
+                    <Button
+                        android:id="@+id/btnChangeUrl"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="Zmień"
+                        android:textColor="?attr/customOnPrimary"
+                        android:background="@drawable/bg_button_primary"
+                        android:textSize="13sp"
+                        android:paddingHorizontal="16dp"/>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Theme row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:orientation="horizontal"
+                android:background="?attr/customSurface"
+                android:paddingHorizontal="16dp"
+                android:gravity="center_vertical"
+                android:layout_marginTop="1dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Motyw aplikacji"
+                    android:textColor="?attr/customTextPrimary"
+                    android:textSize="15sp"/>
+
+                <Button
+                    android:id="@+id/btnTheme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="Zmień motyw"
+                    android:textColor="?attr/customOnPrimary"
+                    android:background="@drawable/bg_button_primary"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="16dp"/>
+
+            </LinearLayout>
+
+            <!-- ── Logout ─────────────────────────────────────────── -->
+            <Button
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/btn_logout"
+                android:textColor="?attr/customTextPrimary"
+                android:background="@drawable/bg_button_danger"
+                android:textSize="15sp"/>
+
+        </LinearLayout>
+    </ScrollView>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"

@@ -40,6 +40,7 @@
     <!-- Chat -->
     <string name="hint_message">Napisz wiadomość&#8230;</string>
     <string name="desc_send">Wyślij</string>
+    <string name="desc_back">Wstecz</string>
 
     <!-- Profile -->
     <string name="btn_logout">Wyloguj się</string>

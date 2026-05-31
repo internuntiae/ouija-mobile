@@ -3,7 +3,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Dark Theme Colors -->
+    <!-- ── Dark (default) ─────────────────────────────────────────── -->
     <color name="dark_window_background">#111111</color>
     <color name="dark_surface">#1A1A1A</color>
     <color name="dark_card_background">#1E1E1E</color>
@@ -17,7 +17,7 @@
     <color name="dark_danger_background">#3A1A1A</color>
     <color name="dark_danger_stroke">#CC3333</color>
 
-    <!-- Light Theme Colors -->
+    <!-- ── Light ──────────────────────────────────────────────────── -->
     <color name="light_window_background">#F5F5F5</color>
     <color name="light_surface">#FFFFFF</color>
     <color name="light_card_background">#FFFFFF</color>
@@ -30,4 +30,60 @@
     <color name="light_hint">#999999</color>
     <color name="light_danger_background">#FFE0E0</color>
     <color name="light_danger_stroke">#D32F2F</color>
+
+    <!-- ── Midnight Blue ──────────────────────────────────────────── -->
+    <color name="midnight_window_background">#0D1117</color>
+    <color name="midnight_surface">#161B22</color>
+    <color name="midnight_card_background">#1C2128</color>
+    <color name="midnight_input_background">#21262D</color>
+    <color name="midnight_primary">#58A6FF</color>
+    <color name="midnight_on_primary">#0D1117</color>
+    <color name="midnight_text_primary">#E6EDF3</color>
+    <color name="midnight_text_secondary">#7D8590</color>
+    <color name="midnight_text_tertiary">#CDD9E5</color>
+    <color name="midnight_hint">#484F58</color>
+    <color name="midnight_danger_background">#2D1B1B</color>
+    <color name="midnight_danger_stroke">#F85149</color>
+
+    <!-- ── Forest ──────────────────────────────────────────────────── -->
+    <color name="forest_window_background">#0F1A12</color>
+    <color name="forest_surface">#162019</color>
+    <color name="forest_card_background">#1B2A1E</color>
+    <color name="forest_input_background">#1E3024</color>
+    <color name="forest_primary">#56D364</color>
+    <color name="forest_on_primary">#0F1A12</color>
+    <color name="forest_text_primary">#D2F4D3</color>
+    <color name="forest_text_secondary">#6B8F72</color>
+    <color name="forest_text_tertiary">#A8D5AC</color>
+    <color name="forest_hint">#3A5C41</color>
+    <color name="forest_danger_background">#2A1515</color>
+    <color name="forest_danger_stroke">#E05252</color>
+
+    <!-- ── Rose ───────────────────────────────────────────────────── -->
+    <color name="rose_window_background">#1A0E14</color>
+    <color name="rose_surface">#221320</color>
+    <color name="rose_card_background">#2A1728</color>
+    <color name="rose_input_background">#331D30</color>
+    <color name="rose_primary">#FF79C6</color>
+    <color name="rose_on_primary">#1A0E14</color>
+    <color name="rose_text_primary">#FFD6F0</color>
+    <color name="rose_text_secondary">#9E6B8A</color>
+    <color name="rose_text_tertiary">#E8A8D0</color>
+    <color name="rose_hint">#5C3050</color>
+    <color name="rose_danger_background">#2D1010</color>
+    <color name="rose_danger_stroke">#FF5555</color>
+
+    <!-- ── Solarized ───────────────────────────────────────────────── -->
+    <color name="solar_window_background">#FDF6E3</color>
+    <color name="solar_surface">#EEE8D5</color>
+    <color name="solar_card_background">#FFFFFF</color>
+    <color name="solar_input_background">#E8E0CB</color>
+    <color name="solar_primary">#268BD2</color>
+    <color name="solar_on_primary">#FFFFFF</color>
+    <color name="solar_text_primary">#657B83</color>
+    <color name="solar_text_secondary">#93A1A1</color>
+    <color name="solar_text_tertiary">#586E75</color>
+    <color name="solar_hint">#B0A898</color>
+    <color name="solar_danger_background">#FDECEA</color>
+    <color name="solar_danger_stroke">#DC322F</color>
 </resources>

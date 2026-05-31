@@ -1,12 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
         <item name="windowSplashScreenBackground">#111111</item>
         <item name="postSplashScreenTheme">@style/Theme.Ouija</item>
     </style>
 
-    <style name="Theme.Ouija" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Custom attributes -->
+    <!-- Base helper macro -->
+    <style name="Theme.Ouija.Base" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">?attr/customPrimary</item>
+        <item name="colorOnPrimary">?attr/customOnPrimary</item>
+        <item name="android:windowBackground">?attr/customWindowBackground</item>
+        <item name="android:statusBarColor">?attr/customWindowBackground</item>
+        <item name="android:navigationBarColor">?attr/customSurface</item>
+    </style>
+
+    <!-- ── Dark (default) ─────────────────────────────────────────── -->
+    <style name="Theme.Ouija" parent="Theme.Ouija.Base">
+        <item name="customWindowBackground">@color/dark_window_background</item>
+        <item name="customSurface">@color/dark_surface</item>
+        <item name="customCardBackground">@color/dark_card_background</item>
+        <item name="customInputBackground">@color/dark_input_background</item>
+        <item name="customTextPrimary">@color/dark_text_primary</item>
+        <item name="customTextSecondary">@color/dark_text_secondary</item>
+        <item name="customTextTertiary">@color/dark_text_tertiary</item>
+        <item name="customHintColor">@color/dark_hint</item>
+        <item name="customPrimary">@color/dark_primary</item>
+        <item name="customOnPrimary">@color/dark_on_primary</item>
+        <item name="customDangerBackground">@color/dark_danger_background</item>
+        <item name="customDangerStroke">@color/dark_danger_stroke</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- ── Light ──────────────────────────────────────────────────── -->
+    <style name="Theme.Ouija.Light" parent="Theme.Ouija.Base">
         <item name="customWindowBackground">@color/light_window_background</item>
         <item name="customSurface">@color/light_surface</item>
         <item name="customCardBackground">@color/light_card_background</item>
@@ -19,16 +47,77 @@
         <item name="customOnPrimary">@color/light_on_primary</item>
         <item name="customDangerBackground">@color/light_danger_background</item>
         <item name="customDangerStroke">@color/light_danger_stroke</item>
-
-        <!-- Standard attributes -->
-        <item name="colorPrimary">?attr/customPrimary</item>
-        <item name="colorOnPrimary">?attr/customOnPrimary</item>
-        <item name="android:windowBackground">?attr/customWindowBackground</item>
-        <item name="android:statusBarColor">?attr/customWindowBackground</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:navigationBarColor">?attr/customSurface</item>
     </style>
 
-    <style name="Theme.Ouija.Chat" parent="Theme.Ouija">
+    <!-- ── Midnight Blue ──────────────────────────────────────────── -->
+    <style name="Theme.Ouija.Midnight" parent="Theme.Ouija.Base">
+        <item name="customWindowBackground">@color/midnight_window_background</item>
+        <item name="customSurface">@color/midnight_surface</item>
+        <item name="customCardBackground">@color/midnight_card_background</item>
+        <item name="customInputBackground">@color/midnight_input_background</item>
+        <item name="customTextPrimary">@color/midnight_text_primary</item>
+        <item name="customTextSecondary">@color/midnight_text_secondary</item>
+        <item name="customTextTertiary">@color/midnight_text_tertiary</item>
+        <item name="customHintColor">@color/midnight_hint</item>
+        <item name="customPrimary">@color/midnight_primary</item>
+        <item name="customOnPrimary">@color/midnight_on_primary</item>
+        <item name="customDangerBackground">@color/midnight_danger_background</item>
+        <item name="customDangerStroke">@color/midnight_danger_stroke</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
+
+    <!-- ── Forest ──────────────────────────────────────────────────── -->
+    <style name="Theme.Ouija.Forest" parent="Theme.Ouija.Base">
+        <item name="customWindowBackground">@color/forest_window_background</item>
+        <item name="customSurface">@color/forest_surface</item>
+        <item name="customCardBackground">@color/forest_card_background</item>
+        <item name="customInputBackground">@color/forest_input_background</item>
+        <item name="customTextPrimary">@color/forest_text_primary</item>
+        <item name="customTextSecondary">@color/forest_text_secondary</item>
+        <item name="customTextTertiary">@color/forest_text_tertiary</item>
+        <item name="customHintColor">@color/forest_hint</item>
+        <item name="customPrimary">@color/forest_primary</item>
+        <item name="customOnPrimary">@color/forest_on_primary</item>
+        <item name="customDangerBackground">@color/forest_danger_background</item>
+        <item name="customDangerStroke">@color/forest_danger_stroke</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- ── Rose ───────────────────────────────────────────────────── -->
+    <style name="Theme.Ouija.Rose" parent="Theme.Ouija.Base">
+        <item name="customWindowBackground">@color/rose_window_background</item>
+        <item name="customSurface">@color/rose_surface</item>
+        <item name="customCardBackground">@color/rose_card_background</item>
+        <item name="customInputBackground">@color/rose_input_background</item>
+        <item name="customTextPrimary">@color/rose_text_primary</item>
+        <item name="customTextSecondary">@color/rose_text_secondary</item>
+        <item name="customTextTertiary">@color/rose_text_tertiary</item>
+        <item name="customHintColor">@color/rose_hint</item>
+        <item name="customPrimary">@color/rose_primary</item>
+        <item name="customOnPrimary">@color/rose_on_primary</item>
+        <item name="customDangerBackground">@color/rose_danger_background</item>
+        <item name="customDangerStroke">@color/rose_danger_stroke</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- ── Solarized ───────────────────────────────────────────────── -->
+    <style name="Theme.Ouija.Solarized" parent="Theme.Ouija.Base">
+        <item name="customWindowBackground">@color/solar_window_background</item>
+        <item name="customSurface">@color/solar_surface</item>
+        <item name="customCardBackground">@color/solar_card_background</item>
+        <item name="customInputBackground">@color/solar_input_background</item>
+        <item name="customTextPrimary">@color/solar_text_primary</item>
+        <item name="customTextSecondary">@color/solar_text_secondary</item>
+        <item name="customTextTertiary">@color/solar_text_tertiary</item>
+        <item name="customHintColor">@color/solar_hint</item>
+        <item name="customPrimary">@color/solar_primary</item>
+        <item name="customOnPrimary">@color/solar_on_primary</item>
+        <item name="customDangerBackground">@color/solar_danger_background</item>
+        <item name="customDangerStroke">@color/solar_danger_stroke</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="Theme.Ouija.Chat" parent="Theme.Ouija" />
+
 </resources>

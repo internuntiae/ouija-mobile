@@ -37,23 +37,47 @@ class RegisterActivity : AppCompatActivity() {
                 Toast.makeText(this, "Wypełnij wszystkie pola", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            if (password.length < 6) {
-                Toast.makeText(this, "Hasło musi mieć min. 6 znaków", Toast.LENGTH_SHORT).show()
+            // Backend requires min 8 characters
+            if (password.length < 8) {
+                Toast.makeText(this, "Hasło musi mieć min. 8 znaków", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             progressBar.visibility = View.VISIBLE
             btnRegister.isEnabled = false
 
+            // POST /api/auth/register — returns user object (no token yet)
+            // After registration, we log in automatically to get a token
             apiClient.register(email, password, nickname,
-                onSuccess = { user ->
-                    sessionManager.saveSession(user.id, user.nickname, email, password, user.avatarUrl)
-                    runOnUiThread {
-                        progressBar.visibility = View.GONE
-                        startActivity(Intent(this, ChatsActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        })
-                    }
+                onSuccess = { _ ->
+                    // Registration succeeded — now log in to get the session token
+                    apiClient.login(nickname, password,
+                        onSuccess = { result ->
+                            sessionManager.saveSession(
+                                result.user.id,
+                                result.user.nickname,
+                                result.user.email ?: email,
+                                result.token,
+                                result.user.avatarUrl
+                            )
+                            runOnUiThread {
+                                progressBar.visibility = View.GONE
+                                startActivity(Intent(this, ChatsActivity::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                })
+                            }
+                        },
+                        onError = { loginError ->
+                            runOnUiThread {
+                                progressBar.visibility = View.GONE
+                                btnRegister.isEnabled = true
+                                // Registration worked but auto-login failed — redirect to login screen
+                                Toast.makeText(this, "Konto utworzone. Zaloguj się.", Toast.LENGTH_LONG).show()
+                                startActivity(Intent(this, LoginActivity::class.java))
+                                finish()
+                            }
+                        }
+                    )
                 },
                 onError = { error ->
                     runOnUiThread {

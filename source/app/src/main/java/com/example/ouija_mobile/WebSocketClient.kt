@@ -1,6 +1,5 @@
 package com.example.ouija_mobile
 
-import android.util.Base64
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import okhttp3.*
@@ -8,17 +7,19 @@ import okhttp3.*
 /**
  * Klient WebSocket dla backendu Ouija.
  *
- * Backend rejestruje połączenia pod:
- *   ws://<host>/ws?userId=<userId>
+ * Protokół autentykacji (token NIGDY w URL):
+ *   1. Klient otwiera ws://<host>/ws  (bez parametrów)
+ *   2. Serwer wysyła { "type": "auth:required" }
+ *   3. Klient odpowiada { "type": "auth", "token": "<sessionToken>" }
+ *   4. Serwer akceptuje i wysyła { "type": "connected", "userId": "..." }
+ *      lub zamyka z kodem 4401 przy błędnym tokenie.
  *
- * i wysyła zdarzenia w formacie:
- *   { "type": "message:created",  "payload": { "chatId": "...", "message": { ...Message } } }
+ * Zdarzenia serwera:
+ *   { "type": "message:created",  "payload": { ...Message } }
  *   { "type": "message:updated",  "payload": { "chatId": "...", "messageId": "...", "message": { ...Message } } }
  *   { "type": "message:deleted",  "payload": { "chatId": "...", "messageId": "..." } }
- *   { "type": "connected",        "userId": "..." }
  *
- * Klient filtruje zdarzenia po chatId, żeby ChatActivity dostawała
- * tylko wiadomości z aktualnie otwartego czatu.
+ * Klient filtruje zdarzenia po chatId.
  */
 class WebSocketClient(private val sessionManager: SessionManager) {
 
@@ -36,33 +37,26 @@ class WebSocketClient(private val sessionManager: SessionManager) {
 
     /**
      * Nawiązuje połączenie WS dla zalogowanego użytkownika.
-     * [chatId] służy tylko do filtrowania zdarzeń — backend przyjmuje
-     * jedno połączenie na użytkownika, nie na czat.
+     * [chatId] służy tylko do filtrowania zdarzeń — backend utrzymuje
+     * jedno połączenie per użytkownik, nie per czat.
      */
     fun connect(chatId: String) {
         currentChatId = chatId
 
-        val userId = sessionManager.getUserId() ?: return
-        val email = sessionManager.getEmail() ?: return
-        val password = sessionManager.getPassword() ?: return
+        val token = sessionManager.getToken() ?: return
 
         val apiClient = ApiClient(sessionManager)
-        // Połączenie per-user: ws://<host>/ws?userId=<userId>
-        val wsUrl = "${apiClient.wsUrl}/ws?userId=$userId"
-
-        val credentials = Base64.encodeToString(
-            "$email:$password".toByteArray(), Base64.NO_WRAP
-        )
+        // Połączenie do /ws — bez tokenu w URL
+        val wsUrl = "${apiClient.wsUrl}/ws"
 
         val request = Request.Builder()
             .url(wsUrl)
-            .header("Authorization", "Basic $credentials")
             .build()
 
         webSocket = httpClient.newWebSocket(request, object : WebSocketListener() {
 
             override fun onOpen(ws: WebSocket, response: Response) {
-                onConnected?.invoke()
+                // Czekamy na "auth:required" od serwera — nie wywołujemy onConnected jeszcze
             }
 
             override fun onMessage(ws: WebSocket, text: String) {
@@ -71,14 +65,24 @@ class WebSocketClient(private val sessionManager: SessionManager) {
                     val type = root.get("type")?.asString ?: return@runCatching
 
                     when (type) {
+                        // Krok 2: serwer prosi o token
+                        "auth:required" -> {
+                            val authFrame = gson.toJson(mapOf("type" to "auth", "token" to token))
+                            ws.send(authFrame)
+                        }
+
+                        // Krok 4: autentykacja OK
+                        "connected" -> {
+                            onConnected?.invoke()
+                        }
+
                         "message:created" -> {
                             val payload = root.getAsJsonObject("payload") ?: return@runCatching
+                            // Payload to bezpośrednio obiekt Message (spread przez backend)
                             val payloadChatId = payload.get("chatId")?.asString
-                            // Ignoruj wiadomości z innych czatów
                             if (payloadChatId != currentChatId) return@runCatching
 
-                            val msgJson = payload.get("message") ?: return@runCatching
-                            val msg = gson.fromJson(msgJson, Message::class.java)
+                            val msg = gson.fromJson(payload, Message::class.java)
                             onMessageReceived?.invoke(msg)
                         }
 
@@ -97,10 +101,6 @@ class WebSocketClient(private val sessionManager: SessionManager) {
 
                             val messageId = payload.get("messageId")?.asString ?: return@runCatching
                             onMessageDeleted?.invoke(messageId)
-                        }
-
-                        "connected" -> {
-                            // ACK od serwera — nic nie robimy, onOpen już był wywołany
                         }
 
                         else -> { /* nieznany typ zdarzenia — ignoruj */ }

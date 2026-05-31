@@ -1,6 +1,5 @@
 package com.example.ouija_mobile
 
-import android.util.Base64
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import okhttp3.*
@@ -29,20 +28,15 @@ class ApiClient(private val sessionManager: SessionManager) {
     private val gson = Gson()
     private val client = OkHttpClient()
 
-    private fun basicAuthHeader(): String {
-        val email = sessionManager.getEmail() ?: ""
-        val password = sessionManager.getPassword() ?: ""
-        val credentials = "$email:$password"
-        return "Basic " + Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
-    }
-
+    /** Adds Authorization: Bearer <token> header to every authenticated request. */
     private fun buildRequest(url: String): Request.Builder {
+        val token = sessionManager.getToken() ?: ""
         return Request.Builder()
             .url(url)
-            .header("Authorization", basicAuthHeader())
+            .header("Authorization", "Bearer $token")
     }
 
-    // ── Users ────────────────────────────────────────────────────────────────
+    // ── Auth ─────────────────────────────────────────────────────────────────
 
     fun register(
         email: String,
@@ -53,11 +47,81 @@ class ApiClient(private val sessionManager: SessionManager) {
     ) {
         val body = gson.toJson(RegisterRequest(email, password, nickname))
             .toRequestBody(JSON)
+        // POST /api/auth/register — no auth header needed
         val request = Request.Builder()
-            .url("$baseUrl")
+            .url("$baseUrl/auth/register")
             .post(body)
             .build()
 
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
+            override fun onResponse(call: Call, response: Response) {
+                val bodyStr = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    runCatching { gson.fromJson(bodyStr, User::class.java) }
+                        .onSuccess(onSuccess)
+                        .onFailure { onError("Parse error") }
+                } else {
+                    val errMsg = runCatching {
+                        gson.fromJson(bodyStr, ErrorResponse::class.java).error
+                    }.getOrNull() ?: "Error ${response.code}"
+                    onError(errMsg)
+                }
+            }
+        })
+    }
+
+    /**
+     * POST /api/auth/login
+     * Body: { nickname, password }
+     * Returns: { token, user }
+     *
+     * Note: the backend logs in with NICKNAME, not email.
+     */
+    fun login(
+        nickname: String,
+        password: String,
+        onSuccess: (LoginResponse) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val body = gson.toJson(LoginRequest(nickname, password)).toRequestBody(JSON)
+        val request = Request.Builder()
+            .url("$baseUrl/auth/login")
+            .post(body)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
+            override fun onResponse(call: Call, response: Response) {
+                val bodyStr = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    runCatching { gson.fromJson(bodyStr, LoginResponse::class.java) }
+                        .onSuccess(onSuccess)
+                        .onFailure { onError("Parse error") }
+                } else {
+                    val errMsg = runCatching {
+                        gson.fromJson(bodyStr, ErrorResponse::class.java).error
+                    }.getOrNull() ?: if (response.code == 401) "Invalid credentials" else "Error ${response.code}"
+                    onError(errMsg)
+                }
+            }
+        })
+    }
+
+    /** POST /api/auth/logout */
+    fun logout(onComplete: () -> Unit) {
+        val request = buildRequest("$baseUrl/auth/logout").post("".toRequestBody(JSON)).build()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) = onComplete()
+            override fun onResponse(call: Call, response: Response) = onComplete()
+        })
+    }
+
+    // ── Users ────────────────────────────────────────────────────────────────
+
+    /** GET /api/users?id=<userId> */
+    fun getUser(userId: String, onSuccess: (User) -> Unit, onError: (String) -> Unit) {
+        val request = buildRequest("$baseUrl/users?id=$userId").get().build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
             override fun onResponse(call: Call, response: Response) {
@@ -73,60 +137,9 @@ class ApiClient(private val sessionManager: SessionManager) {
         })
     }
 
-    fun getUser(userId: String, onSuccess: (User) -> Unit, onError: (String) -> Unit) {
-        // API returns list of all users; find by ID
-        val request = buildRequest("$baseUrl").get().build()
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
-            override fun onResponse(call: Call, response: Response) {
-                val bodyStr = response.body?.string() ?: ""
-                if (response.isSuccessful) {
-                    runCatching {
-                        val type = object : TypeToken<List<User>>() {}.type
-                        val users: List<User> = gson.fromJson(bodyStr, type)
-                        users.first { it.id == userId }
-                    }.onSuccess(onSuccess).onFailure { onError("User not found") }
-                } else {
-                    onError("Error ${response.code}")
-                }
-            }
-        })
-    }
-
-    // Login = fetch all users and verify credentials match a user (Basic Auth is validated server-side)
-    // We call GET /users with credentials — if 200, credentials are valid; find matching user by email
-    fun login(
-        email: String,
-        password: String,
-        onSuccess: (User) -> Unit,
-        onError: (String) -> Unit
-    ) {
-        val credentials = "Basic " + Base64.encodeToString("$email:$password".toByteArray(), Base64.NO_WRAP)
-        val request = Request.Builder()
-            .url("$baseUrl")
-            .header("Authorization", credentials)
-            .get()
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
-            override fun onResponse(call: Call, response: Response) {
-                val bodyStr = response.body?.string() ?: ""
-                if (response.isSuccessful) {
-                    runCatching {
-                        val type = object : TypeToken<List<User>>() {}.type
-                        val users: List<User> = gson.fromJson(bodyStr, type)
-                        users.firstOrNull { it.email == email } ?: throw Exception("User not found")
-                    }.onSuccess(onSuccess).onFailure { onError("Invalid credentials") }
-                } else {
-                    onError(if (response.code == 401) "Invalid credentials" else "Error ${response.code}")
-                }
-            }
-        })
-    }
-
     // ── Chats ────────────────────────────────────────────────────────────────
 
+    /** GET /api/users/<userId>/chats */
     fun getChats(userId: String, onSuccess: (List<Chat>) -> Unit, onError: (String) -> Unit) {
         val request = buildRequest("$baseUrl/users/$userId/chats").get().build()
         client.newCall(request).enqueue(object : Callback {
@@ -147,6 +160,7 @@ class ApiClient(private val sessionManager: SessionManager) {
 
     // ── Messages ─────────────────────────────────────────────────────────────
 
+    /** GET /api/chats/<chatId>/messages */
     fun getMessages(chatId: String, onSuccess: (List<Message>) -> Unit, onError: (String) -> Unit) {
         val request = buildRequest("$baseUrl/chats/$chatId/messages").get().build()
         client.newCall(request).enqueue(object : Callback {
@@ -165,14 +179,17 @@ class ApiClient(private val sessionManager: SessionManager) {
         })
     }
 
+    /**
+     * POST /api/chats/<chatId>/messages
+     * Body: { content }  — senderId is NOT sent; backend reads it from the Bearer token.
+     */
     fun sendMessage(
         chatId: String,
-        senderId: String,
         content: String,
         onSuccess: (Message) -> Unit,
         onError: (String) -> Unit
     ) {
-        val body = gson.toJson(SendMessageRequest(senderId, content)).toRequestBody(JSON)
+        val body = gson.toJson(SendMessageRequest(content)).toRequestBody(JSON)
         val request = buildRequest("$baseUrl/chats/$chatId/messages").post(body).build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
@@ -188,3 +205,5 @@ class ApiClient(private val sessionManager: SessionManager) {
         })
     }
 }
+
+private data class ErrorResponse(val error: String)

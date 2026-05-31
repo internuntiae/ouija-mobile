@@ -25,6 +25,7 @@ class ProfileActivity : AppCompatActivity() {
         val btnLogout = findViewById<Button>(R.id.btnLogout)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
 
+        // Show cached data immediately
         tvNickname.text = sessionManager.getNickname() ?: ""
         tvEmail.text = sessionManager.getEmail() ?: ""
         tvInitials.text = (sessionManager.getNickname() ?: "?").take(2).uppercase()
@@ -42,13 +43,14 @@ class ProfileActivity : AppCompatActivity() {
             }
         }
 
+        // Refresh from server — GET /api/users?id=<userId>
         val userId = sessionManager.getUserId()
         if (userId != null) {
             apiClient.getUser(userId,
                 onSuccess = { user ->
                     runOnUiThread {
                         tvNickname.text = user.nickname
-                        tvEmail.text = user.email
+                        tvEmail.text = user.email ?: sessionManager.getEmail() ?: ""
                         tvInitials.text = user.nickname.take(2).uppercase()
                     }
                 },
@@ -57,10 +59,15 @@ class ProfileActivity : AppCompatActivity() {
         }
 
         btnLogout.setOnClickListener {
-            sessionManager.clearSession() // clears session AND server URL — shows ServerConfigActivity
-            startActivity(Intent(this, ServerConfigActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
+            // Tell the server to invalidate the session token
+            apiClient.logout {
+                sessionManager.clearSession()
+                runOnUiThread {
+                    startActivity(Intent(this, ServerConfigActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    })
+                }
+            }
         }
     }
 }

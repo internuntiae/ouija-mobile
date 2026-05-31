@@ -25,16 +25,16 @@ class SessionManager(context: Context) {
         private const val KEY_USER_ID    = "user_id"
         private const val KEY_NICKNAME   = "nickname"
         private const val KEY_EMAIL      = "email"
-        private const val KEY_PASSWORD   = "password" // stored for Basic Auth header
+        private const val KEY_TOKEN      = "session_token" // Bearer token from /api/auth/login
         private const val KEY_AVATAR_URL = "avatar_url"
     }
 
-    fun saveSession(userId: String, nickname: String, email: String, password: String, avatarUrl: String?) {
+    fun saveSession(userId: String, nickname: String, email: String, token: String, avatarUrl: String?) {
         prefs.edit()
             .putString(KEY_USER_ID, userId)
             .putString(KEY_NICKNAME, nickname)
             .putString(KEY_EMAIL, email)
-            .putString(KEY_PASSWORD, password)
+            .putString(KEY_TOKEN, token)
             .putString(KEY_AVATAR_URL, avatarUrl)
             .apply()
     }
@@ -54,10 +54,10 @@ class SessionManager(context: Context) {
     fun getUserId(): String?    = prefs.getString(KEY_USER_ID, null)
     fun getNickname(): String?  = prefs.getString(KEY_NICKNAME, null)
     fun getEmail(): String?     = prefs.getString(KEY_EMAIL, null)
-    fun getPassword(): String?  = prefs.getString(KEY_PASSWORD, null)
+    fun getToken(): String?     = prefs.getString(KEY_TOKEN, null)
     fun getAvatarUrl(): String? = prefs.getString(KEY_AVATAR_URL, null)
 
-    fun isLoggedIn(): Boolean = getUserId() != null
+    fun isLoggedIn(): Boolean = getUserId() != null && getToken() != null
 
     fun clearSession() {
         prefs.edit().clear().apply()

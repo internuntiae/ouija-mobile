@@ -33,17 +33,21 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
         apiClient = ApiClient(sessionManager)
 
-        val etEmail = findViewById<EditText>(R.id.etEmail)
+        // The backend authenticates by NICKNAME (not email)
+        val etNickname = findViewById<EditText>(R.id.etEmail)   // reuse existing view id
         val etPassword = findViewById<EditText>(R.id.etPassword)
         val btnLogin = findViewById<Button>(R.id.btnLogin)
         val tvRegister = findViewById<TextView>(R.id.tvRegister)
         val progressBar = findViewById<View>(R.id.progressBar)
 
+        // Update hint if the layout still says "Email"
+        etNickname.hint = "Nickname"
+
         btnLogin.setOnClickListener {
-            val email = etEmail.text.toString().trim()
+            val nickname = etNickname.text.toString().trim()
             val password = etPassword.text.toString()
 
-            if (email.isEmpty() || password.isEmpty()) {
+            if (nickname.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Wypełnij wszystkie pola", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -51,9 +55,16 @@ class LoginActivity : AppCompatActivity() {
             progressBar.visibility = View.VISIBLE
             btnLogin.isEnabled = false
 
-            apiClient.login(email, password,
-                onSuccess = { user ->
-                    sessionManager.saveSession(user.id, user.nickname, email, password, user.avatarUrl)
+            apiClient.login(nickname, password,
+                onSuccess = { result ->
+                    // result.token is the Bearer token used for all subsequent requests
+                    sessionManager.saveSession(
+                        result.user.id,
+                        result.user.nickname,
+                        result.user.email ?: "",
+                        result.token,
+                        result.user.avatarUrl
+                    )
                     runOnUiThread {
                         progressBar.visibility = View.GONE
                         startChats()

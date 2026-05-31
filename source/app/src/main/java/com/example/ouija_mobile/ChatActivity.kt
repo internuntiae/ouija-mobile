@@ -90,7 +90,8 @@ class ChatActivity : AppCompatActivity() {
             if (text.isEmpty()) return@setOnClickListener
             etMessage.setText("")
 
-            apiClient.sendMessage(chatId, myId, text,
+            // senderId is NOT passed — backend reads it from the Bearer token
+            apiClient.sendMessage(chatId, text,
                 onSuccess = { message ->
                     // Backend roześle przez WS do wszystkich członków czatu (łącznie z nami),
                     // więc addMessage() zostanie wywołane przez onMessageReceived.

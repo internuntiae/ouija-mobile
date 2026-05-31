@@ -4,6 +4,15 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Read images/files from device storage -->
+    <!-- Android 13+ uses granular permissions -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+    <!-- Android 12 and below -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+
     <application
         android:allowBackup="true"
         android:label="Ouija"

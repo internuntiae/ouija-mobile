@@ -30,6 +30,7 @@
         <item name="customOnPrimary">@color/dark_on_primary</item>
         <item name="customDangerBackground">@color/dark_danger_background</item>
         <item name="customDangerStroke">@color/dark_danger_stroke</item>
+        <item name="customDangerText">@android:color/white</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
@@ -47,6 +48,7 @@
         <item name="customOnPrimary">@color/light_on_primary</item>
         <item name="customDangerBackground">@color/light_danger_background</item>
         <item name="customDangerStroke">@color/light_danger_stroke</item>
+        <item name="customDangerText">@color/light_danger_stroke</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
 
@@ -64,6 +66,7 @@
         <item name="customOnPrimary">@color/midnight_on_primary</item>
         <item name="customDangerBackground">@color/midnight_danger_background</item>
         <item name="customDangerStroke">@color/midnight_danger_stroke</item>
+        <item name="customDangerText">@android:color/white</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
@@ -81,6 +84,7 @@
         <item name="customOnPrimary">@color/forest_on_primary</item>
         <item name="customDangerBackground">@color/forest_danger_background</item>
         <item name="customDangerStroke">@color/forest_danger_stroke</item>
+        <item name="customDangerText">@android:color/white</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
@@ -98,6 +102,7 @@
         <item name="customOnPrimary">@color/rose_on_primary</item>
         <item name="customDangerBackground">@color/rose_danger_background</item>
         <item name="customDangerStroke">@color/rose_danger_stroke</item>
+        <item name="customDangerText">@android:color/white</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
@@ -115,6 +120,7 @@
         <item name="customOnPrimary">@color/solar_on_primary</item>
         <item name="customDangerBackground">@color/solar_danger_background</item>
         <item name="customDangerStroke">@color/solar_danger_stroke</item>
+        <item name="customDangerText">@color/solar_danger_stroke</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
 

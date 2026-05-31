@@ -22,13 +22,22 @@ data class ChatUser(
     val user: User?
 )
 
+data class Attachment(
+    val id: String,
+    val messageId: String,
+    val url: String,
+    val type: String,   // IMAGE | VIDEO | FILE | AUDIO
+    val name: String?
+)
+
 data class Message(
     val id: String,
     val chatId: String,
     val senderId: String,
     val content: String?,
     val sentAt: String,
-    val editedAt: String?
+    val editedAt: String?,
+    val attachments: List<Attachment> = emptyList()
 )
 
 // Friendship returned by GET /api/users/:userId/friends
@@ -58,5 +67,12 @@ data class LoginResponse(
 )
 
 data class SendMessageRequest(
-    val content: String
+    val content: String?,
+    val attachments: List<AttachmentInput> = emptyList()
+)
+
+data class AttachmentInput(
+    val url: String,
+    val type: String,
+    val name: String?
 )

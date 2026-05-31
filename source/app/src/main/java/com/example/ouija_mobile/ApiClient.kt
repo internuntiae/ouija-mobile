@@ -1,9 +1,12 @@
 package com.example.ouija_mobile
 
+import android.content.Context
+import android.net.Uri
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
@@ -155,7 +158,7 @@ class ApiClient(private val sessionManager: SessionManager) {
 
     fun sendMessage(chatId: String, content: String,
                     onSuccess: (Message) -> Unit, onError: (String) -> Unit) {
-        val body = gson.toJson(SendMessageRequest(content)).toRequestBody(JSON)
+        val body = gson.toJson(SendMessageRequest(content = content)).toRequestBody(JSON)
         val req = buildRequest("$baseUrl/chats/$chatId/messages").post(body).build()
         client.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
@@ -166,6 +169,117 @@ class ApiClient(private val sessionManager: SessionManager) {
             }
         })
     }
+
+    fun sendMessageWithAttachments(
+        chatId: String,
+        content: String?,
+        attachments: List<AttachmentInput>,
+        onSuccess: (Message) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val body = gson.toJson(SendMessageRequest(content = content, attachments = attachments)).toRequestBody(JSON)
+        val req = buildRequest("$baseUrl/chats/$chatId/messages").post(body).build()
+        client.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
+            override fun onResponse(call: Call, response: Response) {
+                val s = response.body?.string() ?: ""
+                if (response.isSuccessful) runCatching { gson.fromJson(s, Message::class.java) }.onSuccess(onSuccess).onFailure { onError("Parse error") }
+                else onError("Error ${response.code}")
+            }
+        })
+    }
+
+    // ── Media ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Upload avatar image for a user.
+     * Returns the updated media record with the full URL.
+     */
+    fun uploadAvatar(
+        context: Context,
+        userId: String,
+        imageUri: Uri,
+        onSuccess: (String) -> Unit,   // new avatarUrl
+        onError: (String) -> Unit
+    ) {
+        val contentResolver = context.contentResolver
+        val mimeType = contentResolver.getType(imageUri) ?: "image/jpeg"
+        val inputStream = contentResolver.openInputStream(imageUri) ?: run {
+            onError("Cannot open image"); return
+        }
+        val bytes = inputStream.use { it.readBytes() }
+        val mediaType = mimeType.toMediaTypeOrNull() ?: "image/jpeg".toMediaType()
+        val fileBody = bytes.toRequestBody(mediaType)
+
+        val multipart = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("avatar", "avatar.jpg", fileBody)
+            .build()
+
+        val req = buildRequest("$baseUrl/media/avatar/$userId").post(multipart).build()
+        client.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
+            override fun onResponse(call: Call, response: Response) {
+                val s = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    runCatching {
+                        val obj = gson.fromJson(s, UploadAvatarResponse::class.java)
+                        obj.media.url
+                    }.onSuccess(onSuccess).onFailure { onError("Parse error") }
+                } else {
+                    onError(runCatching { gson.fromJson(s, ErrorResponse::class.java).error }.getOrNull() ?: "Error ${response.code}")
+                }
+            }
+        })
+    }
+
+    /**
+     * Upload one or more files as attachments.
+     * Returns a list of media records with full URLs.
+     */
+    fun uploadFiles(
+        context: Context,
+        uris: List<Uri>,
+        onSuccess: (List<MediaFile>) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val contentResolver = context.contentResolver
+        val builder = MultipartBody.Builder().setType(MultipartBody.FORM)
+
+        for (uri in uris) {
+            val mimeType = contentResolver.getType(uri) ?: "application/octet-stream"
+            val inputStream = contentResolver.openInputStream(uri) ?: continue
+            val bytes = inputStream.use { it.readBytes() }
+            val mediaType = mimeType.toMediaTypeOrNull() ?: "application/octet-stream".toMediaType()
+            val filename = uri.lastPathSegment ?: "file"
+            builder.addFormDataPart("files", filename, bytes.toRequestBody(mediaType))
+        }
+
+        val req = buildRequest("$baseUrl/media/upload").post(builder.build()).build()
+        client.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) = onError(e.message ?: "Network error")
+            override fun onResponse(call: Call, response: Response) {
+                val s = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    runCatching {
+                        val t = object : TypeToken<List<MediaFile>>() {}.type
+                        gson.fromJson<List<MediaFile>>(s, t)
+                    }.onSuccess(onSuccess).onFailure { onError("Parse error") }
+                } else {
+                    onError(runCatching { gson.fromJson(s, ErrorResponse::class.java).error }.getOrNull() ?: "Error ${response.code}")
+                }
+            }
+        })
+    }
 }
 
+data class MediaFile(
+    val id: String,
+    val url: String,
+    val mimeType: String,
+    val filename: String,
+    val storedName: String
+)
+
+private data class UploadAvatarResponse(val media: MediaFile, val user: Any?)
 private data class ErrorResponse(val error: String)

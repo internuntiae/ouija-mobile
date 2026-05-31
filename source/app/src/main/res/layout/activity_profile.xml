@@ -28,15 +28,33 @@
                 android:paddingBottom="24dp"
                 android:background="?attr/customSurface">
 
-                <TextView
-                    android:id="@+id/tvInitials"
+                <!-- Avatar container (stacked: image + initials fallback + camera button) -->
+                <FrameLayout
                     android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:background="@drawable/bg_avatar_large"
-                    android:gravity="center"
-                    android:textColor="?attr/customTextPrimary"
-                    android:textSize="28sp"
-                    android:fontFamily="sans-serif-medium"/>
+                    android:layout_height="80dp">
+
+                    <!-- Initials fallback (shown when no avatar) -->
+                    <TextView
+                        android:id="@+id/tvInitials"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_avatar_large"
+                        android:gravity="center"
+                        android:textColor="?attr/customTextPrimary"
+                        android:textSize="28sp"
+                        android:fontFamily="sans-serif-medium"/>
+
+                    <!-- Avatar image (hidden when no avatar loaded) -->
+                    <ImageView
+                        android:id="@+id/ivAvatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:background="@drawable/bg_avatar_large"
+                        android:visibility="gone"
+                        android:contentDescription="Avatar"/>
+
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/tvNickname"
@@ -141,7 +159,7 @@
                         android:singleLine="true"
                         android:ellipsize="end"/>
 
-                    <Button
+                    <androidx.appcompat.widget.AppCompatButton
                         android:id="@+id/btnChangeUrl"
                         android:layout_width="wrap_content"
                         android:layout_height="36dp"
@@ -172,7 +190,7 @@
                     android:textColor="?attr/customTextPrimary"
                     android:textSize="15sp"/>
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnTheme"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
@@ -185,7 +203,7 @@
             </LinearLayout>
 
             <!-- ── Logout ─────────────────────────────────────────── -->
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnLogout"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
@@ -193,7 +211,7 @@
                 android:layout_marginTop="24dp"
                 android:layout_marginBottom="16dp"
                 android:text="@string/btn_logout"
-                android:textColor="?attr/customTextPrimary"
+                android:textColor="?attr/customDangerText"
                 android:background="@drawable/bg_button_danger"
                 android:textSize="15sp"/>
 

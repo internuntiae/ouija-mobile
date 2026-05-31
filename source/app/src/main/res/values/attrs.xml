@@ -12,4 +12,6 @@
     <attr name="customOnPrimary" format="color" />
     <attr name="customDangerBackground" format="color" />
     <attr name="customDangerStroke" format="color" />
+    <attr name="customDangerText" format="color" />
+    <attr name="customAccent" format="color" />
 </resources>

@@ -1,22 +1,33 @@
 package com.example.ouija_mobile
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import java.io.InputStream
+import java.net.URL
+import java.util.concurrent.Executors
 
 class ProfileActivity : BaseActivity() {
 
     private lateinit var sessionManager: SessionManager
     private lateinit var apiClient: ApiClient
+
+    private lateinit var ivAvatar: ImageView
+    private lateinit var tvInitials: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,7 +37,8 @@ class ProfileActivity : BaseActivity() {
         apiClient = ApiClient(sessionManager)
 
         // ── User info ──────────────────────────────────────────────
-        val tvInitials = findViewById<TextView>(R.id.tvInitials)
+        tvInitials = findViewById(R.id.tvInitials)
+        ivAvatar   = findViewById(R.id.ivAvatar)
         val tvNickname = findViewById<TextView>(R.id.tvNickname)
         val tvEmail    = findViewById<TextView>(R.id.tvEmail)
         val tvStatus   = findViewById<TextView>(R.id.tvStatus)
@@ -37,6 +49,9 @@ class ProfileActivity : BaseActivity() {
         tvInitials.text = cached.take(2).uppercase()
         tvStatus.text   = ""
 
+        // Load cached avatar if available
+        sessionManager.getAvatarUrl()?.let { loadAvatarFromUrl(it) }
+
         val userId = sessionManager.getUserId()
         if (userId != null) {
             apiClient.getUser(userId,
@@ -46,6 +61,7 @@ class ProfileActivity : BaseActivity() {
                         tvEmail.text    = user.email ?: sessionManager.getEmail() ?: ""
                         tvInitials.text = user.nickname.take(2).uppercase()
                         tvStatus.text   = formatStatus(user.status)
+                        user.avatarUrl?.let { loadAvatarFromUrl(it) }
                     }
                 },
                 onError = {}
@@ -137,6 +153,27 @@ class ProfileActivity : BaseActivity() {
         }
     }
 
+    // ── Avatar loading ─────────────────────────────────────────────────────────
+
+    private fun loadAvatarFromUrl(url: String) {
+        val executor = Executors.newSingleThreadExecutor()
+        executor.execute {
+            try {
+                val inputStream: InputStream = URL(url).openStream()
+                val bitmap: Bitmap = BitmapFactory.decodeStream(inputStream)
+                runOnUiThread {
+                    ivAvatar.setImageBitmap(bitmap)
+                    ivAvatar.visibility = View.VISIBLE
+                    tvInitials.visibility = View.GONE
+                }
+            } catch (_: Exception) {
+                // Keep initials visible on error
+            }
+        }
+    }
+
+    // ── Theme ──────────────────────────────────────────────────────────────────
+
     private fun showThemePicker() {
         data class ThemeOption(val label: String, val key: String, val bg: Int, val accent: Int)
 
@@ -151,7 +188,6 @@ class ProfileActivity : BaseActivity() {
         val current = sessionManager.getTheme()
         val currentIdx = themes.indexOfFirst { it.key == current }.coerceAtLeast(0)
 
-        // Build a simple list with color swatches
         val names = themes.map { it.label }.toTypedArray()
         AlertDialog.Builder(this)
             .setTitle("Wybierz motyw")
@@ -159,7 +195,6 @@ class ProfileActivity : BaseActivity() {
                 val chosen = themes[which]
                 sessionManager.saveTheme(chosen.key)
                 dialog.dismiss()
-                // Recreate so the new theme takes effect
                 recreate()
             }
             .setNegativeButton("Anuluj", null)

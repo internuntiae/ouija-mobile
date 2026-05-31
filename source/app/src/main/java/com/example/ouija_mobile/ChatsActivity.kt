@@ -1,6 +1,8 @@
 package com.example.ouija_mobile
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -8,12 +10,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import java.io.InputStream
+import java.net.URL
+import java.util.concurrent.Executors
 
 class ChatsActivity : BaseActivity() {
 
@@ -36,9 +42,14 @@ class ChatsActivity : BaseActivity() {
 
         adapter = ChatAdapter(sessionManager.getUserId() ?: "") { chat ->
             val displayName = getChatDisplayName(chat)
+            val myId = sessionManager.getUserId()
+            val otherUser = chat.users.firstOrNull { it.userId != myId }?.user
             startActivity(Intent(this, ChatActivity::class.java).apply {
                 putExtra("CHAT_ID", chat.id)
                 putExtra("CHAT_NAME", displayName)
+                if (otherUser?.avatarUrl != null) {
+                    putExtra("CHAT_AVATAR_URL", otherUser.avatarUrl)
+                }
             })
         }
 
@@ -134,6 +145,7 @@ class ChatAdapter(
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val tvInitials = view.findViewById<TextView>(R.id.tvInitials)
+        private val ivAvatar   = view.findViewById<ImageView>(R.id.ivAvatar)
         private val tvName = view.findViewById<TextView>(R.id.tvChatName)
         private val tvType = view.findViewById<TextView>(R.id.tvChatType)
 
@@ -147,7 +159,34 @@ class ChatAdapter(
             tvName.text = displayName
             tvType.text = if (chat.type == "GROUP") "Grupa" else "Prywatna"
             tvInitials.text = displayName.take(2).uppercase()
+            tvInitials.visibility = View.VISIBLE
+            ivAvatar.visibility = View.GONE
+
+            // Try to load avatar for private chats
+            val otherUser = chat.users.firstOrNull { it.userId != myUserId }?.user
+            val avatarUrl = otherUser?.avatarUrl
+            if (avatarUrl != null) {
+                loadAvatarIntoViews(avatarUrl, ivAvatar, tvInitials)
+            }
+
             itemView.setOnClickListener { onClick(chat) }
+        }
+
+        private fun loadAvatarIntoViews(url: String, imageView: ImageView, tvInitials: TextView) {
+            val executor = Executors.newSingleThreadExecutor()
+            executor.execute {
+                try {
+                    val inputStream: InputStream = URL(url).openStream()
+                    val bitmap: Bitmap = BitmapFactory.decodeStream(inputStream)
+                    imageView.post {
+                        imageView.setImageBitmap(bitmap)
+                        imageView.visibility = View.VISIBLE
+                        tvInitials.visibility = View.GONE
+                    }
+                } catch (_: Exception) {
+                    // Keep initials
+                }
+            }
         }
     }
 }

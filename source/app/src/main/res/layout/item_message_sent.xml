@@ -16,6 +16,72 @@
         android:paddingVertical="10dp"
         android:layout_marginStart="60dp">
 
+        <!-- Image attachment -->
+        <FrameLayout
+            android:layout_width="200dp"
+            android:layout_height="150dp"
+            android:visibility="gone"
+            android:id="@+id/flImageAttachment"
+            android:layout_marginBottom="6dp">
+
+            <ImageView
+                android:id="@+id/ivAttachment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:contentDescription="Załącznik"/>
+
+            <TextView
+                android:id="@+id/btnDownloadImage"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="6dp"
+                android:background="?attr/customSurface"
+                android:gravity="center"
+                android:text="⬇"
+                android:textSize="16sp"
+                android:alpha="0.85"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Pobierz zdjęcie"/>
+
+        </FrameLayout>
+
+        <!-- Non-image file attachment label with download button -->
+        <LinearLayout
+            android:id="@+id/llAttachmentFile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/tvAttachmentFile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/customOnPrimary"
+                android:textSize="13sp"
+                android:drawablePadding="6dp"/>
+
+            <TextView
+                android:id="@+id/btnDownload"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:text="⬇"
+                android:textSize="16sp"
+                android:textColor="?attr/customOnPrimary"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Pobierz plik"/>
+
+        </LinearLayout>
+
         <TextView
             android:id="@+id/tvContent"
             android:layout_width="wrap_content"

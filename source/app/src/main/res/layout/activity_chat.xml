@@ -26,16 +26,32 @@
             android:contentDescription="@string/desc_back"
             app:tint="?attr/customTextPrimary"/>
 
-        <TextView
-            android:id="@+id/tvChatInitials"
+        <!-- Avatar container: initials + optional photo -->
+        <FrameLayout
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginStart="4dp"
-            android:background="@drawable/bg_avatar"
-            android:gravity="center"
-            android:textColor="?attr/customTextPrimary"
-            android:textSize="14sp"
-            android:fontFamily="sans-serif-medium"/>
+            android:layout_marginStart="4dp">
+
+            <TextView
+                android:id="@+id/tvChatInitials"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_avatar"
+                android:gravity="center"
+                android:textColor="?attr/customTextPrimary"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium"/>
+
+            <ImageView
+                android:id="@+id/ivChatAvatar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:background="@drawable/bg_avatar"
+                android:visibility="gone"
+                android:contentDescription="Avatar rozmówcy"/>
+
+        </FrameLayout>
 
         <TextView
             android:id="@+id/tvChatName"
@@ -60,6 +76,25 @@
         android:paddingVertical="8dp"
         android:paddingHorizontal="12dp" />
 
+    <!-- Pending attachments preview -->
+    <HorizontalScrollView
+        android:id="@+id/scrollPendingFiles"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:background="?attr/customSurface"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="6dp">
+
+        <LinearLayout
+            android:id="@+id/llPendingFiles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"/>
+
+    </HorizontalScrollView>
+
     <!-- Message input bar -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -69,6 +104,17 @@
         android:paddingHorizontal="12dp"
         android:paddingVertical="10dp"
         android:gravity="center_vertical">
+
+        <!-- Attach file button -->
+        <ImageButton
+            android:id="@+id/btnAttach"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_add"
+            android:contentDescription="Załącz plik"
+            android:layout_marginEnd="4dp"
+            app:tint="?attr/customTextSecondary"/>
 
         <EditText
             android:id="@+id/etMessage"

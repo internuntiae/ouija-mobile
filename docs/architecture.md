@@ -2,28 +2,28 @@
 
 ## Overview
 
-ouija mobile to aplikacja jednowarstwowa — brak lokalnej bazy danych, brak cache'u. Każde żądanie trafia bezpośrednio do serwera ouija przez HTTP REST lub WebSocket. Stan UI przechowywany jest w pamięci operacyjnej Activity.
+ouija mobile to aplikacja z lokalnym cache'em wiadomości. Historia czatów przechowywana jest w lokalnej bazie SQLite (Room) i wyświetlana natychmiast przy otwarciu czatu — bez oczekiwania na sieć. Żądania HTTP i zdarzenia WebSocket synchronizują dane z serwerem ouija w tle.
 
 ```
 ┌─────────────────────────────────────┐
 │            Activity / UI            │
 │  (ChatsActivity, ChatActivity, …)   │
-└──────────────┬──────────────────────┘
-               │
-       ┌───────┴────────┐
-       │                │
-       ▼                ▼
-  ApiClient       WebSocketClient
-  (OkHttp3)       (OkHttp3 WS)
-       │                │
-       └───────┬────────┘
-               │
-               ▼
-       EncryptedSharedPreferences
-          (SessionManager)
-               │
-               ▼
-       Serwer ouija (HTTP / WS)
+└──────────┬───────────────┬──────────┘
+           │               │
+   ┌───────┴──────┐  ┌─────┴──────────┐
+   │              │  │                │
+   ▼              ▼  ▼                ▼
+ApiClient   WebSocketClient     MessageDatabase
+(OkHttp3)   (OkHttp3 WS)        (Room / SQLite)
+   │              │                   │
+   └──────┬───────┘         ouija_messages.db
+          │
+          ▼
+  EncryptedSharedPreferences
+     (SessionManager)
+          │
+          ▼
+  Serwer ouija (HTTP / WS)
 ```
 
 ## Klasy
@@ -32,6 +32,7 @@ ouija mobile to aplikacja jednowarstwowa — brak lokalnej bazy danych, brak cac
 |---|---|
 | `ApiClient` | Wszystkie wywołania HTTP REST — auth, użytkownicy, czaty, wiadomości, media |
 | `WebSocketClient` | Połączenie WebSocket — odbiór wiadomości w czasie rzeczywistym |
+| `MessageDatabase` | Lokalna baza SQLite (Room) — cache wiadomości z obsługą offline |
 | `SessionManager` | Przechowywanie sesji i preferencji w `EncryptedSharedPreferences` |
 | `BaseActivity` | Bazowa klasa Activity — aplikuje wybrany motyw przed inflacją layoutu |
 | `Models.kt` | Modele danych Kotlin (`User`, `Chat`, `Message`, `Attachment`, …) |
@@ -76,7 +77,7 @@ Token przechowywany jest w `SessionManager` i wstrzykiwany przez `buildRequest()
 
 ## WebSocketClient — real-time
 
-Połączenie WebSocket jest nawiązywane na poziomie `ChatActivity` i utrzymywane przez cały czas pobytu na ekranie czatu.
+Połączenie WebSocket nawiązywane jest w `ChatActivity` i utrzymywane przez cały czas pobytu na ekranie czatu.
 
 ### Protokół autentykacji
 
@@ -100,15 +101,88 @@ Token nigdy nie trafia do URL — przekazywany jest przez wiadomość po nawiąz
 
 `WebSocketClient` filtruje zdarzenia po `chatId` — jedno połączenie obsługuje cały kanał użytkownika, ale Activity widzi tylko zdarzenia ze swojego czatu.
 
+Każde odebrane zdarzenie jest automatycznie zapisywane / aktualizowane / usuwane w `MessageDatabase`, dzięki czemu lokalna baza pozostaje zsynchronizowana z serwerem.
+
 ### Callbacki
 
 ```kotlin
-wsClient.onMessageReceived = { msg -> runOnUiThread { /* dodaj do listy */ } }
-wsClient.onMessageUpdated  = { msg -> runOnUiThread { /* zaktualizuj */ } }
-wsClient.onMessageDeleted  = { id  -> runOnUiThread { /* usuń */ } }
+wsClient.onMessageReceived = { msg -> runOnUiThread { /* dodaj do listy i zapisz w DB */ } }
+wsClient.onMessageUpdated  = { msg -> runOnUiThread { /* zaktualizuj w liście i DB */ } }
+wsClient.onMessageDeleted  = { id  -> runOnUiThread { /* usuń z listy i DB */ } }
 wsClient.onConnected       = { runOnUiThread { /* pokaż status */ } }
 wsClient.onDisconnected    = { runOnUiThread { /* pokaż brak połączenia */ } }
 ```
+
+---
+
+## MessageDatabase — lokalna baza danych (Room)
+
+`MessageDatabase` to jednowątkowy singleton Room oparty na SQLite. Przechowuje cache wiadomości per czat, umożliwiając natychmiastowe wyświetlenie historii przed załadowaniem danych z sieci.
+
+### Schemat bazy
+
+Plik bazy: `ouija_messages.db` (katalog wewnętrzny aplikacji, niedostępny bez root).
+
+Tabela `messages`:
+
+| Kolumna | Typ | Opis |
+|---|---|---|
+| `id` | TEXT (PK) | ID wiadomości z serwera |
+| `chatId` | TEXT | ID czatu — klucz filtrowania |
+| `senderId` | TEXT | ID nadawcy |
+| `content` | TEXT (nullable) | Treść wiadomości |
+| `sentAt` | TEXT | Czas wysłania (ISO 8601) |
+| `editedAt` | TEXT (nullable) | Czas ostatniej edycji |
+| `attachmentsJson` | TEXT | Lista załączników jako JSON (`List<Attachment>`) |
+
+### Encja i konwersja
+
+Room nie obsługuje natywnie `List<Attachment>`, dlatego lista serializowana jest do JSON przez `Converters` (Gson). Konwersja odbywa się automatycznie przy zapisie i odczycie.
+
+```kotlin
+@Entity(tableName = "messages")
+data class MessageEntity(
+    @PrimaryKey val id: String,
+    val chatId: String,
+    val senderId: String,
+    val content: String?,
+    val sentAt: String,
+    val editedAt: String?,
+    val attachmentsJson: String
+)
+```
+
+`MessageEntity` posiada metody pomocnicze `toMessage(gson)` i `fromMessage(message, gson)` do konwersji między encją Room a modelem domenowym `Message`.
+
+### DAO — operacje na danych
+
+```kotlin
+// Wszystkie wiadomości czatu posortowane chronologicznie
+fun getMessagesForChat(chatId: String): List<MessageEntity>
+
+// Wstaw lub zastąp (używane przy odbiorze z API i WebSocket)
+fun insertOrReplace(message: MessageEntity)
+fun insertOrReplaceAll(messages: List<MessageEntity>)
+
+// Usuń konkretną wiadomość (zdarzenie message:deleted)
+fun deleteById(messageId: String)
+
+// Wyczyść cały cache czatu
+fun clearChat(chatId: String)
+
+// Liczba wiadomości w cache (debug/log)
+fun countForChat(chatId: String): Int
+```
+
+### Strategia cache
+
+1. **Otwarcie czatu:** `MessageDatabase` zwraca zapisane wiadomości natychmiast — UI wyświetla historię bez opóźnienia.
+2. **Załadowanie z API:** `ApiClient.getMessages()` pobiera aktualne wiadomości z serwera i zapisuje je przez `insertOrReplaceAll()`, zastępując dane w cache.
+3. **WebSocket:** nowe, edytowane i usunięte wiadomości aktualizują zarówno UI, jak i lokalną bazę.
+
+### Singleton i bezpieczeństwo wątkowe
+
+`MessageDatabase.getInstance(context)` zwraca jeden współdzielony egzemplarz (wzorzec double-checked locking z `@Volatile`). Wszystkie operacje DAO muszą być wywoływane poza wątkiem głównym (Room blokuje przy próbie użycia na UI thread).
 
 ---
 
@@ -132,7 +206,7 @@ wsClient.onDisconnected    = { runOnUiThread { /* pokaż brak połączenia */ } 
 
 ### Zachowanie przy wylogowaniu
 
-`clearSession()` czyści wszystkie dane, ale **zachowuje** motyw i adresy serwerów — użytkownik nie musi ich ponownie konfigurować po wylogowaniu.
+`clearSession()` czyści wszystkie dane sesji, ale **zachowuje** motyw i adresy serwerów — użytkownik nie musi ich ponownie konfigurować po wylogowaniu. Lokalna baza wiadomości (`MessageDatabase`) **nie jest** czyszczona przy wylogowaniu — stare wiadomości zostaną zastąpione przy ponownym zalogowaniu przez `insertOrReplaceAll`.
 
 ---
 
@@ -144,14 +218,16 @@ Modele w `Models.kt` odzwierciedlają odpowiedzi API:
 data class User(id, email, nickname, status, avatarUrl)
 data class Chat(id, name, type, users: List<ChatUser>)
 data class ChatUser(chatId, userId, role, user: User?)
-data class Message(id, chatId, content, senderId, createdAt, updatedAt, attachments, sender)
+data class Message(id, chatId, senderId, content, sentAt, editedAt, attachments)
 data class Attachment(id, messageId, url, type, name)
-data class Friendship(id, requesterId, addresseeId, status, requester, addressee)
+data class Friendship(userId, friendId, status, user: User, friend: User)
 data class LoginResponse(token, user: User)
 data class RegisterRequest(email, password, nickname)
 data class SendMessageRequest(content, attachments)
 data class AttachmentInput(url, type, name)
 ```
+
+> **Uwaga:** pola `Message` używają `sentAt` i `editedAt` (nie `createdAt` / `updatedAt`). `MessageEntity` odzwierciedla te same nazwy.
 
 ---
 

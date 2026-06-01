@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -33,6 +34,8 @@ class ChatActivity : BaseActivity() {
     private lateinit var wsClient: WebSocketClient
     private lateinit var adapter: MessageAdapter
     private lateinit var recycler: RecyclerView
+    private lateinit var db: MessageDatabase
+    private val gson = Gson()
 
     private var chatId: String = ""
 
@@ -64,6 +67,7 @@ class ChatActivity : BaseActivity() {
         sessionManager = SessionManager(this)
         apiClient = ApiClient(sessionManager)
         wsClient = WebSocketClient(sessionManager)
+        db = MessageDatabase.getInstance(this)
 
         chatId = intent.getStringExtra("CHAT_ID") ?: ""
         val chatName = intent.getStringExtra("CHAT_NAME") ?: "Chat"
@@ -107,19 +111,47 @@ class ChatActivity : BaseActivity() {
         recycler.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         recycler.adapter = adapter
 
-        apiClient.getMessages(chatId,
-            onSuccess = { messages ->
+        // ── Ładowanie wiadomości: cache najpierw, potem API ───────────────────
+        // 1. Pokaż wiadomości z lokalnej bazy danych natychmiast
+        Executors.newSingleThreadExecutor().execute {
+            val cached = db.messageDao().getMessagesForChat(chatId)
+                .map { it.toMessage(gson) }
+            if (cached.isNotEmpty()) {
                 runOnUiThread {
-                    adapter.setMessages(messages.reversed())
+                    adapter.setMessages(cached)
                     recycler.scrollToPosition(adapter.itemCount - 1)
                 }
-            },
-            onError = { error ->
-                runOnUiThread { Toast.makeText(this, error, Toast.LENGTH_SHORT).show() }
             }
-        )
+            // 2. Pobierz świeże dane z API i zaktualizuj cache
+            apiClient.getMessages(chatId,
+                onSuccess = { messages ->
+                    val sorted = messages.reversed()
+                    // Zapisz w tle do bazy danych
+                    Executors.newSingleThreadExecutor().execute {
+                        db.messageDao().insertOrReplaceAll(
+                            sorted.map { MessageEntity.fromMessage(it, gson) }
+                        )
+                    }
+                    runOnUiThread {
+                        adapter.setMessages(sorted)
+                        recycler.scrollToPosition(adapter.itemCount - 1)
+                    }
+                },
+                onError = { error ->
+                    runOnUiThread {
+                        // Jeśli API niedostępne, cache wystarczy — pokaż ostrzeżenie
+                        val cacheInfo = if (cached.isNotEmpty()) " (tryb offline, ${cached.size} wiad. z cache)" else ""
+                        Toast.makeText(this, "$error$cacheInfo", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
+        }
 
         wsClient.onMessageReceived = { message ->
+            // Zapisz do cache w tle
+            Executors.newSingleThreadExecutor().execute {
+                db.messageDao().insertOrReplace(MessageEntity.fromMessage(message, gson))
+            }
             runOnUiThread {
                 adapter.addMessage(message)
                 recycler.scrollToPosition(adapter.itemCount - 1)
@@ -127,10 +159,18 @@ class ChatActivity : BaseActivity() {
         }
 
         wsClient.onMessageUpdated = { message ->
+            // Zaktualizuj w cache
+            Executors.newSingleThreadExecutor().execute {
+                db.messageDao().insertOrReplace(MessageEntity.fromMessage(message, gson))
+            }
             runOnUiThread { adapter.updateMessage(message) }
         }
 
         wsClient.onMessageDeleted = { messageId ->
+            // Usuń z cache
+            Executors.newSingleThreadExecutor().execute {
+                db.messageDao().deleteById(messageId)
+            }
             runOnUiThread { adapter.removeMessage(messageId) }
         }
 
@@ -154,6 +194,9 @@ class ChatActivity : BaseActivity() {
             if (pendingUris.isEmpty()) {
                 apiClient.sendMessage(chatId, text,
                     onSuccess = { message ->
+                        Executors.newSingleThreadExecutor().execute {
+                            db.messageDao().insertOrReplace(MessageEntity.fromMessage(message, gson))
+                        }
                         runOnUiThread {
                             adapter.addMessage(message)
                             recycler.scrollToPosition(adapter.itemCount - 1)
@@ -183,6 +226,9 @@ class ChatActivity : BaseActivity() {
                             content = text.ifEmpty { null },
                             attachments = attachments,
                             onSuccess = { message ->
+                                Executors.newSingleThreadExecutor().execute {
+                                    db.messageDao().insertOrReplace(MessageEntity.fromMessage(message, gson))
+                                }
                                 runOnUiThread {
                                     adapter.addMessage(message)
                                     recycler.scrollToPosition(adapter.itemCount - 1)

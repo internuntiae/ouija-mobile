@@ -82,7 +82,11 @@ Zależności zarządzane są przez Gradle Version Catalog (`gradle/libs.versions
 | `androidx.activity:activity-ktx` | 1.8.0 | `ActivityResultContracts` |
 | OkHttp3 | (via Gradle) | HTTP i WebSocket |
 | Gson | (via Gradle) | Serializacja JSON |
+| `androidx.room:room-runtime` | (via Gradle) | Lokalna baza danych SQLite |
+| `androidx.room:room-ktx` | (via Gradle) | Rozszerzenia Kotlin dla Room |
 | `androidx.security:security-crypto` | (via Gradle) | `EncryptedSharedPreferences` |
+
+> Room wymaga też procesora adnotacji (`room-compiler`) skonfigurowanego jako `kapt` lub `ksp` w `build.gradle.kts`.
 
 ---
 
@@ -106,6 +110,23 @@ adb logcat -s ouija_mobile
 
 ---
 
+## Debugowanie lokalnej bazy danych
+
+Plik bazy `ouija_messages.db` znajduje się w katalogu wewnętrznym aplikacji. Na emulatorze lub urządzeniu z root można go podejrzeć przez Android Studio Database Inspector (`View → Tool Windows → App Inspection → Database Inspector`).
+
+Przydatne operacje przy debugowaniu:
+
+```bash
+# Liczba wiadomości w cache dla konkretnego czatu (przez adb shell)
+adb shell
+run-as com.example.ouija_mobile
+sqlite3 databases/ouija_messages.db "SELECT chatId, COUNT(*) FROM messages GROUP BY chatId;"
+```
+
+Aby wyczyścić cache i wymusić pełne pobranie z API, wystarczy odinstalować i ponownie zainstalować aplikację lub wywołać `MessageDao.clearChat(chatId)` z poziomu kodu.
+
+---
+
 ## Typowe problemy
 
 **„Cannot connect to server"** na urządzeniu fizycznym
@@ -119,6 +140,17 @@ adb logcat -s ouija_mobile
 
 **EncryptedSharedPreferences error przy zmianie debug/release**
 → Odinstaluj aplikację z urządzenia i zainstaluj ponownie — preferencje zaszyfrowane starym kluczem są niekompatybilne po zmianie środowiska.
+
+**Room: `IllegalStateException: Cannot access database on the main thread`**
+→ Wywołania DAO muszą być wykonywane poza wątkiem głównym. Użyj `ExecutorService`, `Coroutines` lub `AsyncTask` (deprecated). Przykład z executor:
+```kotlin
+executor.execute {
+    db.messageDao().insertOrReplaceAll(entities)
+}
+```
+
+**Room: schemat bazy nieaktualny po zmianie `MessageEntity`**
+→ Zwiększ wersję bazy w `@Database(version = X)` i dostarcz migrację lub użyj `.fallbackToDestructiveMigration()` w czasie developmentu.
 
 ---
 
@@ -137,3 +169,13 @@ Projekt zawiera szablony testów wygenerowane przez Android Studio:
 Testy jednostkowe: `app/src/test/java/com/example/ouija_mobile/ExampleUnitTest.kt`
 
 Testy instrumentowane: `app/src/androidTest/java/com/example/ouija_mobile/ExampleInstrumentedTest.kt`
+
+---
+
+## Zespół i podział odpowiedzialności
+
+| Osoba                  | Obszar                   | Szczegóły                                                                   |
+|------------------------|--------------------------|-----------------------------------------------------------------------------|
+| **Marek Zjeżdżałka**   | Backend & infrastruktura | Serwer ouija, publiczna instancja, WebSocketClient, MessageDatabase (Room), |
+| **Filip Maciejewski**  | Android UI/UX            | Layouty XML, motywy kolorystyczne, RecyclerView, nawigacja, ekrany          |
+| **Gustaw Grześkowiak** | Android logika           | ApiClient,  SessionManager, REST API, deployment, Docker,                   |

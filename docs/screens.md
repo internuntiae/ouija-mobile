@@ -99,6 +99,12 @@ Widok pojedynczego czatu z obsługą wiadomości w czasie rzeczywistym.
 - Wysyłanie załączników (zdjęcia, wideo, pliki)
 - Pobieranie i zapisywanie obrazów do galerii
 - WebSocket — wiadomości pojawiają się w czasie rzeczywistym bez odświeżania
+- Lokalny cache — historia czatu ładowana natychmiast z `MessageDatabase` przed odpowiedzią serwera
+
+**Strategia ładowania wiadomości:**
+1. Przy otwarciu czatu `MessageDatabase.getMessagesForChat(chatId)` wypełnia listę natychmiast
+2. `ApiClient.getMessages()` pobiera aktualne dane z serwera i aktualizuje cache przez `insertOrReplaceAll()`
+3. Nowe zdarzenia WebSocket (`message:created`, `message:updated`, `message:deleted`) aktualizują jednocześnie UI i lokalną bazę
 
 **Attachmenty:**
 - Wybór pliku przez `ActivityResultContracts.GetContent`
